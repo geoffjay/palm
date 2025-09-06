@@ -11,7 +11,9 @@ import { Theme } from "@radix-ui/themes";
 import { App } from "./App";
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
-	return <Theme>{children}</Theme>;
+	return (
+		<Theme accentColor="red" grayColor="sand" radius="small">{children}</Theme>
+	);
 };
 
 function start() {

@@ -1,32 +1,44 @@
+import { Flex, Text, Spinner } from "@radix-ui/themes";
+import { LockClosedIcon } from "@radix-ui/react-icons";
+
 export function LoadingScreen() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 
-                    flex items-center justify-center">
-      <div className="text-center">
+    <Flex 
+      direction="column" 
+      align="center" 
+      justify="center"
+      minHeight="100vh"
+      style={{
+        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)"
+      }}
+    >
+      <Flex direction="column" align="center">
         {/* Logo */}
-        <div className="mb-6 flex justify-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <svg
-              className="w-10 h-10 text-white"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 10.74s9-5.19 9-10.74V7l-10-5z" />
-            </svg>
-          </div>
-        </div>
+        <Flex justify="center" mb="6">
+          <Flex 
+            align="center" 
+            justify="center"
+            width="64px"
+            height="64px"
+            style={{
+              background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
+              borderRadius: "var(--radius-3)"
+            }}
+          >
+            <LockClosedIcon width="40" height="40" color="white" />
+          </Flex>
+        </Flex>
 
         {/* Loading Spinner */}
-        <div className="mb-4">
-          <div className="w-8 h-8 border-3 border-slate-300 dark:border-slate-600 border-t-blue-600 
-                         rounded-full animate-spin mx-auto"></div>
-        </div>
+        <Flex mb="4">
+          <Spinner size="3" />
+        </Flex>
 
         {/* Loading Text */}
-        <p className="text-slate-600 dark:text-slate-400 text-sm">
+        <Text size="2" color="gray">
           Loading your account...
-        </p>
-      </div>
-    </div>
+        </Text>
+      </Flex>
+    </Flex>
   );
 }

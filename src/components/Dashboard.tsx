@@ -1,3 +1,6 @@
+import { Flex, Text, Button, Card, Avatar, Heading } from "@radix-ui/themes";
+import { DashboardIcon } from "@radix-ui/react-icons";
+
 interface User {
   userId: string;
   email: string;
@@ -14,167 +17,202 @@ interface DashboardProps {
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950">
+    <Flex 
+      direction="column" 
+      minHeight="100vh"
+      style={{
+        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)"
+      }}
+    >
       {/* Header */}
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+      <Card 
+        style={{ 
+          borderRadius: 0,
+          borderBottom: "1px solid var(--gray-6)"
+        }}
+      >
+        <Flex 
+          style={{ maxWidth: "80rem", margin: "0 auto" }} 
+          px="4"
+        >
+          <Flex justify="between" align="center" height="64px" width="100%">
             {/* Logo */}
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 10.74s9-5.19 9-10.74V7l-10-5z" />
-                </svg>
-              </div>
-              <h1 className="ml-3 text-xl font-semibold text-slate-900 dark:text-white">
+            <Flex align="center" gap="3">
+              <Flex 
+                align="center" 
+                justify="center"
+                width="32px"
+                height="32px"
+                style={{
+                  background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
+                  borderRadius: "var(--radius-3)"
+                }}
+              >
+                <DashboardIcon width="20" height="20" color="white" />
+              </Flex>
+              <Heading size="5">
                 Dashboard
-              </h1>
-            </div>
+              </Heading>
+            </Flex>
 
             {/* User Menu */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <img
+            <Flex align="center" gap="4">
+              <Flex 
+                align="center" 
+                gap="3" 
+                className="hidden sm:flex"
+              >
+                <Avatar
                   src={user.picture}
                   alt={user.name}
-                  className="w-8 h-8 rounded-full ring-2 ring-slate-200 dark:ring-slate-700"
+                  size="2"
+                  fallback={user.name.charAt(0).toUpperCase()}
                 />
-                <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                <Flex direction="column">
+                  <Text size="2" weight="medium">
                     {user.name}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  </Text>
+                  <Text size="1" color="gray">
                     {user.email}
-                  </p>
-                </div>
-              </div>
+                  </Text>
+                </Flex>
+              </Flex>
               
-              <button
+              <Button
                 onClick={onLogout}
-                className="px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                         hover:text-slate-900 dark:hover:text-white
-                         hover:bg-slate-100 dark:hover:bg-slate-700
-                         rounded-md transition-colors"
+                variant="ghost"
+                size="2"
               >
                 Sign out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+              </Button>
+            </Flex>
+          </Flex>
+        </Flex>
+      </Card>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm p-8">
-          <div className="text-center">
-            <div className="mb-6">
-              <img
-                src={user.picture}
-                alt={user.name}
-                className="w-24 h-24 rounded-full mx-auto ring-4 ring-slate-200 dark:ring-slate-700"
-              />
-            </div>
-            
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Welcome, {user.name}!
-            </h2>
-            
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
-              You're successfully signed in to your account.
-            </p>
+      <Flex 
+        style={{ maxWidth: "80rem", margin: "0 auto" }} 
+        px="4" 
+        py="8" 
+        asChild
+      >
+        <main>
+          <Card style={{ padding: "2rem", width: "100%" }}>
+            <Flex direction="column" align="center">
+              <Flex mb="6">
+                <Avatar
+                  src={user.picture}
+                  alt={user.name}
+                  size="6"
+                  fallback={user.name.charAt(0).toUpperCase()}
+                />
+              </Flex>
+              
+              <Heading size="8" mb="2">
+                Welcome, {user.name}!
+              </Heading>
+              
+              <Text size="4" color="gray" mb="8">
+                You're successfully signed in to your account.
+              </Text>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              {/* User Info Card */}
-              <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Profile Information
-                </h3>
-                <div className="space-y-3 text-left">
-                  <div>
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      Name:
-                    </span>
-                    <p className="text-slate-900 dark:text-white">{user.name}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      Email:
-                    </span>
-                    <p className="text-slate-900 dark:text-white">{user.email}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      User ID:
-                    </span>
-                    <p className="text-slate-900 dark:text-white font-mono text-xs">
-                      {user.userId}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <Flex 
+                gap="6" 
+                style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                  maxWidth: "64rem",
+                  width: "100%"
+                }}
+              >
+                {/* User Info Card */}
+                <Card variant="surface" style={{ padding: "1.5rem" }}>
+                  <Heading size="4" mb="4">
+                    Profile Information
+                  </Heading>
+                  <Flex direction="column" gap="3" align="start">
+                    <Flex direction="column">
+                      <Text size="2" weight="medium" color="gray">
+                        Name:
+                      </Text>
+                      <Text>{user.name}</Text>
+                    </Flex>
+                    <Flex direction="column">
+                      <Text size="2" weight="medium" color="gray">
+                        Email:
+                      </Text>
+                      <Text>{user.email}</Text>
+                    </Flex>
+                    <Flex direction="column">
+                      <Text size="2" weight="medium" color="gray">
+                        User ID:
+                      </Text>
+                      <Text size="1" style={{ fontFamily: "monospace" }}>
+                        {user.userId}
+                      </Text>
+                    </Flex>
+                  </Flex>
+                </Card>
 
-              {/* Session Info Card */}
-              <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Session Information
-                </h3>
-                <div className="space-y-3 text-left">
-                  <div>
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      Created:
-                    </span>
-                    <p className="text-slate-900 dark:text-white">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      Last Activity:
-                    </span>
-                    <p className="text-slate-900 dark:text-white">
-                      {new Date(user.lastActivity).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                {/* Session Info Card */}
+                <Card variant="surface" style={{ padding: "1.5rem" }}>
+                  <Heading size="4" mb="4">
+                    Session Information
+                  </Heading>
+                  <Flex direction="column" gap="3" align="start">
+                    <Flex direction="column">
+                      <Text size="2" weight="medium" color="gray">
+                        Created:
+                      </Text>
+                      <Text>
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </Text>
+                    </Flex>
+                    <Flex direction="column">
+                      <Text size="2" weight="medium" color="gray">
+                        Last Activity:
+                      </Text>
+                      <Text>
+                        {new Date(user.lastActivity).toLocaleString()}
+                      </Text>
+                    </Flex>
+                  </Flex>
+                </Card>
 
-              {/* Quick Actions Card */}
-              <div className="bg-slate-50 dark:bg-slate-700 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Quick Actions
-                </h3>
-                <div className="space-y-3">
-                  <button className="w-full px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                                   bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500
-                                   rounded-md hover:bg-slate-50 dark:hover:bg-slate-500
-                                   transition-colors">
-                    View Profile
-                  </button>
-                  <button className="w-full px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300
-                                   bg-white dark:bg-slate-600 border border-slate-300 dark:border-slate-500
-                                   rounded-md hover:bg-slate-50 dark:hover:bg-slate-500
-                                   transition-colors">
-                    Settings
-                  </button>
-                  <button 
-                    onClick={onLogout}
-                    className="w-full px-4 py-2 text-sm font-medium text-red-700 dark:text-red-300
-                             bg-red-50 dark:bg-red-900 border border-red-300 dark:border-red-700
-                             rounded-md hover:bg-red-100 dark:hover:bg-red-800
-                             transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+                {/* Quick Actions Card */}
+                <Card variant="surface" style={{ padding: "1.5rem" }}>
+                  <Heading size="4" mb="4">
+                    Quick Actions
+                  </Heading>
+                  <Flex direction="column" gap="3">
+                    <Button 
+                      variant="outline" 
+                      style={{ width: "100%" }}
+                    >
+                      View Profile
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      style={{ width: "100%" }}
+                    >
+                      Settings
+                    </Button>
+                    <Button 
+                      onClick={onLogout}
+                      variant="outline"
+                      color="red"
+                      style={{ width: "100%" }}
+                    >
+                      Sign Out
+                    </Button>
+                  </Flex>
+                </Card>
+              </Flex>
+            </Flex>
+          </Card>
+        </main>
+      </Flex>
+    </Flex>
   );
 }
