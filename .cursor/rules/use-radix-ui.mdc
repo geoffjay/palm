@@ -1,0 +1,257 @@
+---
+description: Prioritize Radix UI components with TailwindCSS styling before creating custom components
+globs:
+alwaysApply: false
+---
+
+# Prioritize Radix UI Components for Frontend Development
+
+## Overview
+
+When developing UI components, **always prioritize Radix UI primitives** before creating custom components. Radix UI provides unstyled, accessible React components that integrate seamlessly with TailwindCSS and should be the foundation for all common UI patterns.
+
+## Why Radix UI?
+
+- **Accessibility First**: Built-in WAI-ARIA compliance, keyboard navigation, and screen reader support
+- **Unstyled by Design**: Complete styling freedom with TailwindCSS utilities
+- **Production Ready**: Battle-tested components used by major applications
+- **Developer Experience**: Comprehensive TypeScript support and excellent documentation
+- **Maintainability**: Reduces custom code surface area and potential bugs
+
+## Implementation Guidelines
+
+### 1. Component Discovery Process
+
+Before building any new component, **always check** if Radix UI provides a primitive:
+
+**Available Radix UI Primitives:**
+
+- `Accordion` - Collapsible content sections
+- `AlertDialog` - Modal dialogs for important actions
+- `AspectRatio` - Maintain consistent width/height ratios
+- `Avatar` - User profile images with fallbacks
+- `Checkbox` - Boolean input controls
+- `Collapsible` - Show/hide content sections
+- `ContextMenu` - Right-click contextual menus
+- `Dialog` - Modal overlays and popups
+- `DropdownMenu` - Action menus and option lists
+- `Form` - Form field management with validation
+- `HoverCard` - Content preview on hover
+- `Label` - Accessible form labels
+- `Menubar` - Application menu bars
+- `NavigationMenu` - Site navigation structures
+- `Popover` - Floating content containers
+- `Progress` - Loading and completion indicators
+- `RadioGroup` - Single-choice option groups
+- `ScrollArea` - Custom scrollable regions
+- `Select` - Dropdown selection inputs
+- `Separator` - Visual content dividers
+- `Slider` - Range input controls
+- `Switch` - Toggle boolean controls
+- `Tabs` - Tabbed content interfaces
+- `Toast` - Notification messages
+- `Toggle` - Pressed/unpressed state buttons
+- `ToggleGroup` - Grouped toggle controls
+- `Toolbar` - Action button collections
+- `Tooltip` - Contextual help text
+
+### 2. Styling with TailwindCSS
+
+Apply TailwindCSS classes directly to Radix components using the `className` prop:
+
+```tsx
+import * as Dialog from "@radix-ui/react-dialog";
+
+function CustomModal({ children, title, ...props }) {
+  return (
+    <Dialog.Root {...props}>
+      <Dialog.Trigger className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        Open Modal
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 animate-in fade-in-0" />
+        <Dialog.Content className="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-white rounded-lg shadow-lg border p-6 max-w-md w-full animate-in fade-in-0 zoom-in-95">
+          <Dialog.Title className="text-lg font-semibold mb-4">
+            {title}
+          </Dialog.Title>
+          <div className="space-y-4">{children}</div>
+          <Dialog.Close className="absolute right-4 top-4 opacity-70 hover:opacity-100">
+            ✕
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+```
+
+### 3. Handling Component States
+
+Use Tailwind's data attribute selectors to style component states:
+
+```tsx
+import * as Toggle from "@radix-ui/react-toggle";
+
+function ToggleButton({ children, ...props }) {
+  return (
+    <Toggle.Root
+      className="px-4 py-2 rounded-md border bg-white hover:bg-gray-50 
+                 data-[state=on]:bg-blue-100 data-[state=on]:border-blue-500 
+                 data-[state=on]:text-blue-700 transition-colors"
+      {...props}
+    >
+      {children}
+    </Toggle.Root>
+  );
+}
+```
+
+### 4. Component Composition Patterns
+
+Create reusable compound components by wrapping Radix primitives:
+
+```tsx
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+
+interface MenuItem {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+interface DropdownProps {
+  trigger: React.ReactNode;
+  items: MenuItem[];
+  align?: "start" | "center" | "end";
+}
+
+function Dropdown({ trigger, items, align = "end" }: DropdownProps) {
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>{trigger}</DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align={align}
+          className="min-w-[160px] bg-white border rounded-md shadow-lg p-1 
+                     animate-in fade-in-0 zoom-in-95"
+        >
+          {items.map((item, index) => (
+            <DropdownMenu.Item
+              key={index}
+              className="px-3 py-2 text-sm rounded-sm cursor-pointer
+                         hover:bg-gray-100 focus:bg-gray-100 outline-none
+                         disabled:text-gray-400 disabled:cursor-not-allowed"
+              onClick={item.onClick}
+              disabled={item.disabled}
+            >
+              {item.label}
+            </DropdownMenu.Item>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+```
+
+### 5. Form Integration
+
+Combine Radix UI form primitives for robust form handling:
+
+```tsx
+import * as Form from "@radix-ui/react-form";
+import * as Label from "@radix-ui/react-label";
+import * as Switch from "@radix-ui/react-switch";
+
+function SettingsForm() {
+  return (
+    <Form.Root className="space-y-6">
+      <Form.Field
+        name="notifications"
+        className="flex items-center justify-between"
+      >
+        <div>
+          <Label.Root className="text-sm font-medium">
+            Email Notifications
+          </Label.Root>
+          <Form.Message className="text-xs text-gray-500" match="valueMissing">
+            Please make a selection
+          </Form.Message>
+        </div>
+        <Form.Control asChild>
+          <Switch.Root
+            className="w-11 h-6 bg-gray-200 rounded-full relative 
+                                  data-[state=checked]:bg-blue-600 transition-colors"
+          >
+            <Switch.Thumb
+              className="block w-5 h-5 bg-white rounded-full 
+                                     transition-transform translate-x-0.5 
+                                     data-[state=checked]:translate-x-[22px]"
+            />
+          </Switch.Root>
+        </Form.Control>
+      </Form.Field>
+    </Form.Root>
+  );
+}
+```
+
+## Development Workflow
+
+### Step 1: Research First
+
+- Check [Radix UI Primitives](https://www.radix-ui.com/primitives) documentation
+- Identify if your use case matches an existing primitive
+- Review the component's API and examples
+
+### Step 2: Implement with TailwindCSS
+
+- Install the specific Radix component: `bun add @radix-ui/react-[component-name]`
+- Import the component parts you need
+- Apply TailwindCSS classes for styling
+- Test accessibility with keyboard navigation and screen readers
+
+### Step 3: Create Reusable Wrappers
+
+- Build project-specific component wrappers that encapsulate common patterns
+- Export these from a shared components directory
+- Document the component's props and usage
+
+## When NOT to Use Radix UI
+
+Only build custom components when:
+
+1. **No Equivalent Primitive**: The functionality doesn't exist in Radix UI
+2. **Highly Specialized Logic**: Component requires complex business logic that doesn't fit Radix patterns
+3. **Performance Critical**: Specific performance requirements that custom implementation can better address
+4. **Third-party Integration**: When integrating with external libraries that conflict with Radix components
+
+## Project Structure
+
+Organize Radix-based components in a clear hierarchy:
+
+```
+src/
+  components/
+    ui/           # Radix + TailwindCSS wrappers
+      Button.tsx
+      Dialog.tsx
+      Select.tsx
+    forms/        # Form-specific compositions
+      LoginForm.tsx
+      ContactForm.tsx
+    layout/       # Layout compositions
+      Navigation.tsx
+      Sidebar.tsx
+```
+
+## Resources
+
+- [Radix UI Primitives Documentation](https://www.radix-ui.com/primitives/docs)
+- [TailwindCSS Documentation](https://tailwindcss.com/docs)
+- [Radix UI Styling Guide](https://www.radix-ui.com/primitives/docs/guides/styling)
+- [Accessibility Best Practices](https://www.radix-ui.com/primitives/docs/overview/accessibility)
+
+## Examples Repository
+
+Consider creating a components showcase that demonstrates proper Radix UI + TailwindCSS patterns for the team to reference and maintain consistency across the application.
