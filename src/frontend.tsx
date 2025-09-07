@@ -11,19 +11,35 @@ import { createRoot } from "react-dom/client";
 import "@radix-ui/themes/styles.css";
 
 import { App } from "./App";
+import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 
 import "./index.css";
 
-const Wrapper = ({ children }: { children: React.ReactNode }) => {
+const RadixThemeWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { theme } = useTheme();
+
   return (
-    <Theme accentColor="red" grayColor="sand" radius="small" panelBackground="translucent">
+    <Theme accentColor="red" grayColor="sand" radius="small" panelBackground="translucent" appearance={theme}>
       {children}
     </Theme>
   );
 };
 
+const Wrapper = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <ThemeProvider>
+      <RadixThemeWrapper>{children}</RadixThemeWrapper>
+    </ThemeProvider>
+  );
+};
+
 function start() {
-  const root = createRoot(document.getElementById("root")!);
+  const rootElement = document.getElementById("root");
+  if (!rootElement) {
+    throw new Error("Root element not found");
+  }
+
+  const root = createRoot(rootElement);
   root.render(
     <Wrapper>
       <App />

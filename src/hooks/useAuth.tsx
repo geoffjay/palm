@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-
-interface User {
-  userId: string;
-  email: string;
-  name: string;
-  picture: string;
-  createdAt: number;
-  lastActivity: number;
-}
+import type { User } from "../types/user";
 
 interface AuthState {
   user: User | null;
