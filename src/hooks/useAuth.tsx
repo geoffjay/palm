@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface User {
   userId: string;
@@ -24,8 +24,8 @@ export function useAuth() {
 
   const checkAuth = async () => {
     try {
-      setAuthState(prev => ({ ...prev, loading: true }));
-      
+      setAuthState((prev) => ({ ...prev, loading: true }));
+
       const response = await fetch("/auth/user", {
         method: "GET",
         credentials: "include",
@@ -33,7 +33,7 @@ export function useAuth() {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         setAuthState({
           user: data.user,
           loading: false,
@@ -62,7 +62,7 @@ export function useAuth() {
         method: "POST",
         credentials: "include",
       });
-      
+
       setAuthState({
         user: null,
         loading: false,

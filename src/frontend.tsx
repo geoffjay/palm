@@ -5,24 +5,34 @@
  * It is included in `src/index.html`.
  */
 
-import { createRoot } from "react-dom/client";
 import { Theme } from "@radix-ui/themes";
+import { createRoot } from "react-dom/client";
+
+import "@radix-ui/themes/styles.css";
 
 import { App } from "./App";
 
+import "./index.css";
+
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
-	return (
-		<Theme accentColor="red" grayColor="sand" radius="small">{children}</Theme>
-	);
+  return (
+    <Theme accentColor="red" grayColor="sand" radius="small" panelBackground="translucent">
+      {children}
+    </Theme>
+  );
 };
 
 function start() {
-	const root = createRoot(document.getElementById("root")!);
-	root.render(<Wrapper><App /></Wrapper>);
+  const root = createRoot(document.getElementById("root")!);
+  root.render(
+    <Wrapper>
+      <App />
+    </Wrapper>,
+  );
 }
 
 if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", start);
+  document.addEventListener("DOMContentLoaded", start);
 } else {
-	start();
+  start();
 }

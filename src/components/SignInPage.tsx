@@ -1,10 +1,10 @@
-import * as Form from "@radix-ui/react-form";
-import * as Label from "@radix-ui/react-label";
 import * as Checkbox from "@radix-ui/react-checkbox";
+import * as Form from "@radix-ui/react-form";
+import { CheckIcon, GitHubLogoIcon, LockClosedIcon } from "@radix-ui/react-icons";
+import * as Label from "@radix-ui/react-label";
 import * as Separator from "@radix-ui/react-separator";
-import { Flex, Text, Button, Card, TextField } from "@radix-ui/themes";
-import { LockClosedIcon, CheckIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
+import { Button, Card, Flex, Text, TextField } from "@radix-ui/themes";
+import { useId, useState } from "react";
 
 interface SignInPageProps {
   onGoogleSignIn: () => void;
@@ -15,6 +15,10 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
+  const emailId = useId();
+  const passwordId = useId();
+  const rememberId = useId();
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     // For now, just trigger Google sign-in since we only support OAuth
@@ -22,27 +26,27 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
   };
 
   return (
-    <Flex 
-      direction="column" 
-      align="center" 
-      justify="center" 
+    <Flex
+      direction="column"
+      align="center"
+      justify="center"
       minHeight="100vh"
       p="4"
       style={{
-        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)"
+        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)",
       }}
     >
       <Flex direction="column" width="100%" style={{ maxWidth: "28rem" }}>
         {/* Logo */}
         <Flex justify="center" mb="8">
-          <Flex 
-            align="center" 
+          <Flex
+            align="center"
             justify="center"
             width="48px"
             height="48px"
             style={{
               background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
-              borderRadius: "var(--radius-3)"
+              borderRadius: "var(--radius-3)",
             }}
           >
             <LockClosedIcon width="32" height="32" color="white" />
@@ -50,12 +54,7 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
         </Flex>
 
         {/* Title */}
-        <Text 
-          size="6" 
-          weight="medium" 
-          align="center" 
-          mb="8"
-        >
+        <Text size="6" weight="medium" align="center" mb="8">
           Sign in to your account
         </Text>
 
@@ -66,14 +65,14 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
               {/* Email Field */}
               <Form.Field name="email">
                 <Flex direction="column" gap="2">
-                  <Label.Root htmlFor="email">
+                  <Label.Root htmlFor={emailId}>
                     <Text size="2" weight="medium">
                       Email address
                     </Text>
                   </Label.Root>
                   <Form.Control asChild>
                     <TextField.Root
-                      id="email"
+                      id={emailId}
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -87,14 +86,14 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
               {/* Password Field */}
               <Form.Field name="password">
                 <Flex direction="column" gap="2">
-                  <Label.Root htmlFor="password">
+                  <Label.Root htmlFor={passwordId}>
                     <Text size="2" weight="medium">
                       Password
                     </Text>
                   </Label.Root>
                   <Form.Control asChild>
                     <TextField.Root
-                      id="password"
+                      id={passwordId}
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -109,7 +108,7 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
               <Flex align="center" justify="between">
                 <Flex align="center" gap="2">
                   <Checkbox.Root
-                    id="remember"
+                    id={rememberId}
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
                   >
@@ -117,30 +116,21 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
                       <CheckIcon width="12" height="12" />
                     </Checkbox.Indicator>
                   </Checkbox.Root>
-                  <Label.Root htmlFor="remember">
+                  <Label.Root htmlFor={rememberId}>
                     <Text size="2" color="gray">
                       Remember me
                     </Text>
                   </Label.Root>
                 </Flex>
-                
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="1"
-                  color="blue"
-                >
+
+                <Button type="button" variant="ghost" size="1" color="blue">
                   Forgot password?
                 </Button>
               </Flex>
 
               {/* Sign In Button */}
               <Form.Submit asChild>
-                <Button
-                  type="submit"
-                  size="3"
-                  style={{ width: "100%" }}
-                >
+                <Button type="submit" size="3" style={{ width: "100%" }}>
                   Sign in
                 </Button>
               </Form.Submit>
@@ -158,13 +148,8 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
 
           {/* OAuth Buttons */}
           <Flex gap="3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onGoogleSignIn}
-              size="3"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: "8px" }}>
+            <Button type="button" variant="outline" onClick={onGoogleSignIn} size="3">
+              <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: "8px" }} aria-label="Google logo">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -185,11 +170,7 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
               Google
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="3"
-            >
+            <Button type="button" variant="outline" size="3">
               <GitHubLogoIcon width="20" height="20" style={{ marginRight: "8px" }} />
               GitHub
             </Button>
@@ -197,19 +178,9 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
         </Card>
 
         {/* Sign Up Link */}
-        <Text 
-          align="center" 
-          size="2" 
-          color="gray"
-          mt="6"
-        >
+        <Text align="center" size="2" color="gray" mt="6">
           Not a member?{" "}
-          <Button
-            type="button"
-            variant="ghost"
-            size="1"
-            color="blue"
-          >
+          <Button type="button" variant="ghost" size="1" color="blue">
             Start a 14 day free trial
           </Button>
         </Text>

@@ -1,22 +1,20 @@
-import { useAuth } from "./hooks/useAuth";
-import { SignInPage } from "./components/SignInPage";
 import { Dashboard } from "./components/Dashboard";
 import { LoadingScreen } from "./components/LoadingScreen";
-
-import "./index.css";
+import { SignInPage } from "./components/SignInPage";
+import { useAuth } from "./hooks/useAuth";
 
 export function App() {
-	const { user, loading, authenticated, loginWithGoogle, logout } = useAuth();
+  const { user, loading, authenticated, loginWithGoogle, logout } = useAuth();
 
-	if (loading) {
-		return <LoadingScreen />;
-	}
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
-	if (!authenticated || !user) {
-		return <SignInPage onGoogleSignIn={loginWithGoogle} />;
-	}
+  if (!authenticated || !user) {
+    return <SignInPage onGoogleSignIn={loginWithGoogle} />;
+  }
 
-	return <Dashboard user={user} onLogout={logout} />;
+  return <Dashboard user={user} onLogout={logout} />;
 }
 
 export default App;

@@ -1,5 +1,5 @@
-import { Flex, Text, Button, Card, Avatar, Heading } from "@radix-ui/themes";
 import { DashboardIcon } from "@radix-ui/react-icons";
+import { Avatar, Button, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 
 interface User {
   userId: string;
@@ -17,57 +17,43 @@ interface DashboardProps {
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   return (
-    <Flex 
-      direction="column" 
+    <Flex
+      direction="column"
       minHeight="100vh"
       style={{
-        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)"
+        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)",
       }}
     >
       {/* Header */}
-      <Card 
-        style={{ 
+      <Card
+        style={{
           borderRadius: 0,
-          borderBottom: "1px solid var(--gray-6)"
+          borderBottom: "1px solid var(--gray-6)",
         }}
       >
-        <Flex 
-          style={{ maxWidth: "80rem", margin: "0 auto" }} 
-          px="4"
-        >
+        <Flex style={{ maxWidth: "80rem", margin: "0 auto" }} px="4">
           <Flex justify="between" align="center" height="64px" width="100%">
             {/* Logo */}
             <Flex align="center" gap="3">
-              <Flex 
-                align="center" 
+              <Flex
+                align="center"
                 justify="center"
                 width="32px"
                 height="32px"
                 style={{
                   background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
-                  borderRadius: "var(--radius-3)"
+                  borderRadius: "var(--radius-3)",
                 }}
               >
                 <DashboardIcon width="20" height="20" color="white" />
               </Flex>
-              <Heading size="5">
-                Dashboard
-              </Heading>
+              <Heading size="5">Dashboard</Heading>
             </Flex>
 
             {/* User Menu */}
             <Flex align="center" gap="4">
-              <Flex 
-                align="center" 
-                gap="3" 
-                className="hidden sm:flex"
-              >
-                <Avatar
-                  src={user.picture}
-                  alt={user.name}
-                  size="2"
-                  fallback={user.name.charAt(0).toUpperCase()}
-                />
+              <Flex align="center" gap="3" className="hidden sm:flex">
+                <Avatar src={user.picture} alt={user.name} size="2" fallback={user.name.charAt(0).toUpperCase()} />
                 <Flex direction="column">
                   <Text size="2" weight="medium">
                     {user.name}
@@ -77,12 +63,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   </Text>
                 </Flex>
               </Flex>
-              
-              <Button
-                onClick={onLogout}
-                variant="ghost"
-                size="2"
-              >
+
+              <Button onClick={onLogout} variant="ghost" size="2">
                 Sign out
               </Button>
             </Flex>
@@ -91,43 +73,28 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       </Card>
 
       {/* Main Content */}
-      <Flex 
-        style={{ maxWidth: "80rem", margin: "0 auto" }} 
-        px="4" 
-        py="8" 
-        asChild
-      >
-        <main>
-          <Card style={{ padding: "2rem", width: "100%" }}>
-            <Flex direction="column" align="center">
+      <Flex direction="column" align="stretch" my="0" mx="auto" px="4" py="8" width="100%">
+        <Card variant="surface">
+          <Flex direction="column" align="center" width="100%" p="4">
               <Flex mb="6">
-                <Avatar
-                  src={user.picture}
-                  alt={user.name}
-                  size="6"
-                  fallback={user.name.charAt(0).toUpperCase()}
-                />
+                <Avatar src={user.picture} alt={user.name} size="6" fallback={user.name.charAt(0).toUpperCase()} />
               </Flex>
-              
+
               <Heading size="8" mb="2">
                 Welcome, {user.name}!
               </Heading>
-              
+
               <Text size="4" color="gray" mb="8">
                 You're successfully signed in to your account.
               </Text>
 
-              <Flex 
-                gap="6" 
-                style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                  maxWidth: "64rem",
-                  width: "100%"
-                }}
+              <Grid
+                columns={{ initial: "1", sm: "2", lg: "3" }}
+                gap="6"
+                width="100%"
               >
                 {/* User Info Card */}
-                <Card variant="surface" style={{ padding: "1.5rem" }}>
+                <Card variant="surface">
                   <Heading size="4" mb="4">
                     Profile Information
                   </Heading>
@@ -156,7 +123,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 </Card>
 
                 {/* Session Info Card */}
-                <Card variant="surface" style={{ padding: "1.5rem" }}>
+                <Card variant="surface">
                   <Heading size="4" mb="4">
                     Session Information
                   </Heading>
@@ -165,53 +132,33 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                       <Text size="2" weight="medium" color="gray">
                         Created:
                       </Text>
-                      <Text>
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </Text>
+                      <Text>{new Date(user.createdAt).toLocaleDateString()}</Text>
                     </Flex>
                     <Flex direction="column">
                       <Text size="2" weight="medium" color="gray">
                         Last Activity:
                       </Text>
-                      <Text>
-                        {new Date(user.lastActivity).toLocaleString()}
-                      </Text>
+                      <Text>{new Date(user.lastActivity).toLocaleString()}</Text>
                     </Flex>
                   </Flex>
                 </Card>
 
                 {/* Quick Actions Card */}
-                <Card variant="surface" style={{ padding: "1.5rem" }}>
+                <Card variant="surface">
                   <Heading size="4" mb="4">
                     Quick Actions
                   </Heading>
                   <Flex direction="column" gap="3">
-                    <Button 
-                      variant="outline" 
-                      style={{ width: "100%" }}
-                    >
-                      View Profile
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      style={{ width: "100%" }}
-                    >
-                      Settings
-                    </Button>
-                    <Button 
-                      onClick={onLogout}
-                      variant="outline"
-                      color="red"
-                      style={{ width: "100%" }}
-                    >
+                    <Button variant="classic">View Profile</Button>
+                    <Button variant="outline">Settings</Button>
+                    <Button onClick={onLogout} variant="outline" color="red">
                       Sign Out
                     </Button>
                   </Flex>
                 </Card>
-              </Flex>
+              </Grid>
             </Flex>
           </Card>
-        </main>
       </Flex>
     </Flex>
   );
