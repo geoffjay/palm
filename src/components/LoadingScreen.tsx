@@ -8,9 +8,6 @@ export function LoadingScreen() {
       align="center"
       justify="center"
       minHeight="100vh"
-      style={{
-        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)",
-      }}
     >
       <Flex direction="column" align="center">
         {/* Logo */}
@@ -20,10 +17,6 @@ export function LoadingScreen() {
             justify="center"
             width="64px"
             height="64px"
-            style={{
-              background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
-              borderRadius: "var(--radius-3)",
-            }}
           >
             <LockClosedIcon width="40" height="40" color="white" />
           </Flex>

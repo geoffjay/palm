@@ -25,9 +25,6 @@ export function Layout({ user, onLogout, children, title = "Dashboard" }: Layout
     <Flex
       direction="column"
       minHeight="100vh"
-      style={{
-        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)",
-      }}
     >
       {/* Header */}
       <Card
@@ -45,10 +42,6 @@ export function Layout({ user, onLogout, children, title = "Dashboard" }: Layout
                 justify="center"
                 width="32px"
                 height="32px"
-                style={{
-                  background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
-                  borderRadius: "var(--radius-3)",
-                }}
               >
                 <DashboardIcon width="20" height="20" color="white" />
               </Flex>

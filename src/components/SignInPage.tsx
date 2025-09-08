@@ -32,9 +32,6 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
       justify="center"
       minHeight="100vh"
       p="4"
-      style={{
-        background: "linear-gradient(135deg, var(--gray-1) 0%, var(--gray-3) 100%)",
-      }}
     >
       <Flex direction="column" width="100%" style={{ maxWidth: "28rem" }}>
         {/* Logo */}
@@ -44,10 +41,6 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
             justify="center"
             width="48px"
             height="48px"
-            style={{
-              background: "linear-gradient(135deg, var(--blue-9) 0%, var(--purple-9) 100%)",
-              borderRadius: "var(--radius-3)",
-            }}
           >
             <LockClosedIcon width="32" height="32" color="white" />
           </Flex>
