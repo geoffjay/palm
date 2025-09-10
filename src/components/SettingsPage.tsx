@@ -12,7 +12,7 @@ export function SettingsPage({ user, onLogout }: SettingsPageProps) {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <Layout user={user} onLogout={onLogout} title="Settings">
+    <Layout user={user} onLogout={onLogout}>
       <Flex direction="column" gap="6">
         {/* Appearance Settings */}
         <Card variant="surface">

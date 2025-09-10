@@ -1,10 +1,27 @@
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { DesktopIcon, ExitIcon, GearIcon, MoonIcon, PersonIcon, SunIcon } from "@radix-ui/react-icons";
-import * as Separator from "@radix-ui/react-separator";
-import { Avatar, Box, Button, Flex, Text } from "@radix-ui/themes";
+import { Avatar, Box, Button, DropdownMenu, Flex, Separator, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
+import styled from "styled-components";
+
 import { useTheme } from "../contexts/ThemeContext";
 import type { User } from "../types/user";
+
+const DropdownMenuContent = styled(DropdownMenu.Content)`
+  margin-top: 2px;
+  width: 256px;
+`;
+
+const DropdownMenuItem = styled(DropdownMenu.Item)`
+  height: 32px;
+  padding: 0 4px;
+  align-items: middle;
+`;
+
+const ThemeButton = styled(Button)`
+  height: 32px;
+  width: 32px;
+  align-items: middle;
+`;
 
 interface UserMenuProps {
   user: User;
@@ -16,7 +33,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
+      <DropdownMenu.Trigger>
         <Button variant="ghost" size="1">
           <Avatar
             src={user.picture}
@@ -28,74 +45,73 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
         </Button>
       </DropdownMenu.Trigger>
 
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" sideOffset={8}>
+      <DropdownMenuContent align="end" sideOffset={8}>
           {/* User Info */}
-          <Box p="3">
+          <Flex p="3" direction="column" gap="1">
             <Text size="3" weight="medium">
               {user.name}
             </Text>
             <Text size="2" color="gray">
               {user.email}
             </Text>
-          </Box>
+          </Flex>
 
-          <Separator.Root />
+          <Separator size="4" />
 
           {/* Theme Selector */}
-          <Box p="3">
-            <Text size="2" weight="medium" mb="2">
+          <Flex py="2" px="4" align="center" justify="between" height="48px">
+            <Text size="2" weight="medium">
               Theme
             </Text>
-            <Flex gap="1">
-              <Button variant={theme === "light" ? "solid" : "ghost"} size="1" onClick={() => setTheme("light")}>
-                <SunIcon width="16" height="16" />
-              </Button>
-              <Button variant={theme === "dark" ? "solid" : "ghost"} size="1" onClick={() => setTheme("dark")}>
-                <MoonIcon width="16" height="16" />
-              </Button>
-              <Button
+            <Flex gap="2" align="center">
+              <ThemeButton variant={theme === "light" ? "solid" : "ghost"} radius="full" size="1" onClick={() => setTheme("light")}>
+                <SunIcon width="20" height="20" />
+              </ThemeButton>
+              <ThemeButton variant={theme === "dark" ? "solid" : "ghost"} radius="full" size="1" onClick={() => setTheme("dark")}>
+                <MoonIcon width="20" height="20" />
+              </ThemeButton>
+              <ThemeButton
                 variant="ghost"
                 size="1"
+                radius="full"
                 onClick={() => {
                   const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
                   setTheme(systemTheme);
                 }}
               >
-                <DesktopIcon width="16" height="16" />
-              </Button>
+                <DesktopIcon width="20" height="20" />
+              </ThemeButton>
             </Flex>
-          </Box>
+          </Flex>
 
-          <Separator.Root />
+          <Separator size="4" />
 
           {/* Menu Items */}
-          <DropdownMenu.Item asChild>
+          <DropdownMenuItem asChild>
             <Link to="/profile">
               <Flex align="center" gap="3" p="2">
                 <PersonIcon width="16" height="16" />
                 <Text>Profile</Text>
               </Flex>
             </Link>
-          </DropdownMenu.Item>
+          </DropdownMenuItem>
 
-          <DropdownMenu.Item asChild>
+          <DropdownMenuItem asChild>
             <Link to="/settings">
               <Flex align="center" gap="3" p="2">
                 <GearIcon width="16" height="16" />
                 <Text>Settings</Text>
               </Flex>
             </Link>
-          </DropdownMenu.Item>
+          </DropdownMenuItem>
 
-          <DropdownMenu.Item onSelect={onLogout}>
+          <DropdownMenuItem onSelect={onLogout}>
             <Flex align="center" gap="3" p="2">
               <ExitIcon width="16" height="16" />
               <Text>Log out</Text>
             </Flex>
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
     </DropdownMenu.Root>
   );
 }

@@ -16,12 +16,7 @@ export function TopNavigation({ user, onLogout, onToggleSidebar }: TopNavigation
         {/* Left side - Logo and Sidebar Toggle */}
         <Flex align="center" gap="3">
           {/* Logo */}
-          <Flex
-            width="32px"
-            height="32px"
-            align="center"
-            justify="center"
-          >
+          <Flex width="32px" height="32px" align="center" justify="center">
             <DashboardIcon width="24" height="24" />
           </Flex>
 
