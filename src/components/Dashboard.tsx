@@ -11,8 +11,7 @@ interface DashboardProps {
 export function Dashboard({ user, onLogout }: DashboardProps) {
   return (
     <Layout user={user} onLogout={onLogout} title="Dashboard">
-      <Card variant="surface">
-        <Flex direction="column" align="center" width="100%" p="4">
+        <Flex data-testid="dashboard" direction="column" align="center" width="100%" p="4" height="100%">
           <Flex mb="6">
             <Avatar src={user.picture} alt={user.name} size="6" fallback={user.name.charAt(0).toUpperCase()} />
           </Flex>
@@ -99,7 +98,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             </Card>
           </Grid>
         </Flex>
-      </Card>
     </Layout>
   );
 }

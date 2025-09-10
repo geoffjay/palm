@@ -1,110 +1,60 @@
-import { DashboardIcon, GearIcon, MoonIcon, PersonIcon, SunIcon } from "@radix-ui/react-icons";
-import { Avatar, Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
-import { Link, useLocation } from "react-router";
-import { useTheme } from "../contexts/ThemeContext";
+import { Box, Card, Flex } from "@radix-ui/themes";
+import { useEffect, useState } from "react";
 import type { User } from "../types/user";
+import { Sidebar } from "./Sidebar";
+import { TopNavigation } from "./TopNavigation";
 
 interface LayoutProps {
   user: User;
   onLogout: () => void;
   children: React.ReactNode;
-  title?: string;
 }
 
-export function Layout({ user, onLogout, children, title = "Dashboard" }: LayoutProps) {
-  const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
+export function Layout({ user, onLogout, children }: LayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const navItems = [
-    { path: "/", label: "Dashboard", icon: DashboardIcon },
-    { path: "/profile", label: "Profile", icon: PersonIcon },
-    { path: "/settings", label: "Settings", icon: GearIcon },
-  ];
+  // Check if we're on mobile/tablet
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+      // Auto-close sidebar on mobile
+      if (window.innerWidth < 1024) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
 
   return (
-    <Flex
-      direction="column"
-      minHeight="100vh"
-    >
-      {/* Header */}
-      <Card
-        style={{
-          borderRadius: 0,
-          borderBottom: "1px solid var(--gray-6)",
-        }}
-      >
-        <Flex style={{ maxWidth: "80rem", margin: "0 auto" }} px="4">
-          <Flex justify="between" align="center" height="64px" width="100%">
-            {/* Logo */}
-            <Flex align="center" gap="3">
-              <Flex
-                align="center"
-                justify="center"
-                width="32px"
-                height="32px"
-              >
-                <DashboardIcon width="20" height="20" color="white" />
-              </Flex>
-              <Heading size="5">{title}</Heading>
-            </Flex>
+    <Flex direction="column" data-testid="layout">
+      {/* Top Navigation */}
+      <TopNavigation user={user} onLogout={onLogout} onToggleSidebar={toggleSidebar} />
 
-            {/* Navigation */}
-            <Flex align="center" gap="2" className="hidden md:flex">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                return (
-                  <Link key={item.path} to={item.path} style={{ textDecoration: "none" }}>
-                    <Button
-                      variant={isActive ? "solid" : "ghost"}
-                      size="2"
-                      style={{
-                        color: isActive ? "white" : "var(--gray-11)",
-                      }}
-                    >
-                      <Icon width="16" height="16" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                );
-              })}
-            </Flex>
+      {/* Content Area with Sidebar */}
+      <Flex flexGrow="1" px="2" height="100%">
+        {/* Sidebar */}
+        <Sidebar isOpen={sidebarOpen} isMobile={isMobile} onClose={closeSidebar} data-testid="sidebar" />
 
-            {/* User Menu */}
-            <Flex align="center" gap="4">
-              {/* Theme Toggle */}
-              <Button
-                onClick={toggleTheme}
-                variant="ghost"
-                size="2"
-                title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
-              >
-                {theme === "light" ? <MoonIcon width="16" height="16" /> : <SunIcon width="16" height="16" />}
-              </Button>
-
-              <Flex align="center" gap="3" className="hidden sm:flex">
-                <Avatar src={user.picture} alt={user.name} size="2" fallback={user.name.charAt(0).toUpperCase()} />
-                <Flex direction="column">
-                  <Text size="2" weight="medium">
-                    {user.name}
-                  </Text>
-                  <Text size="1" color="gray">
-                    {user.email}
-                  </Text>
-                </Flex>
-              </Flex>
-
-              <Button onClick={onLogout} variant="ghost" size="2">
-                Sign out
-              </Button>
-            </Flex>
-          </Flex>
+        {/* Main Content */}
+        <Flex direction="column" mx="4" flexGrow="1" height="100%" data-testid="layout-content">
+          <Card variant="surface">
+            {children}
+          </Card>
         </Flex>
-      </Card>
-
-      {/* Main Content */}
-      <Flex direction="column" align="stretch" my="0" mx="auto" px="4" py="8" width="100%">
-        {children}
       </Flex>
     </Flex>
   );

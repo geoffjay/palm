@@ -26,22 +26,11 @@ export function SignInPage({ onGoogleSignIn }: SignInPageProps) {
   };
 
   return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      minHeight="100vh"
-      p="4"
-    >
+    <Flex direction="column" align="center" justify="center" minHeight="100vh" p="4">
       <Flex direction="column" width="100%" style={{ maxWidth: "28rem" }}>
         {/* Logo */}
         <Flex justify="center" mb="8">
-          <Flex
-            align="center"
-            justify="center"
-            width="48px"
-            height="48px"
-          >
+          <Flex align="center" justify="center" width="48px" height="48px">
             <LockClosedIcon width="32" height="32" color="white" />
           </Flex>
         </Flex>
