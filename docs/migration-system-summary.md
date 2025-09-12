@@ -40,7 +40,7 @@ bun run migrate:reset
 ### **File Structure Created**
 
 ```
-src/db/
+db/
 ├── cli.ts                              # ✅ CLI interface
 ├── migrator.ts                         # ✅ Core migration engine
 └── migrations/

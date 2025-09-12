@@ -39,9 +39,9 @@ const user = await userService.findByEmail("user@example.com");
 
 ## Schema Management
 
-- **Schema Definition**: `src/db/schema.ts` - Define your database schema using Drizzle's type-safe schema builder
-- **Generated Migrations**: `src/db/drizzle/` - Auto-generated SQL migrations from schema changes
-- **Services**: `src/db/services/` - Business logic layer for database operations
+- **Schema Definition**: `db/schema.ts` - Define your database schema using Drizzle's type-safe schema builder
+- **Generated Migrations**: `db/drizzle/` - Auto-generated SQL migrations from schema changes
+- **Services**: `db/services/` - Business logic layer for database operations
 
 ## Environment Variables
 
@@ -55,7 +55,7 @@ DB_PASSWORD=password
 
 ## Migration Workflow
 
-1. **Modify Schema**: Update `src/db/schema.ts` with your changes
+1. **Modify Schema**: Update `db/schema.ts` with your changes
 2. **Generate Migration**: Run `bun run db:generate` to create migration files
 3. **Apply Migration**: Run `bun run db:migrate` to apply changes to database
 

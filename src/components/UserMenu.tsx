@@ -46,72 +46,82 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
       </DropdownMenu.Trigger>
 
       <DropdownMenuContent align="end" sideOffset={8}>
-          {/* User Info */}
-          <Flex p="3" direction="column" gap="1">
-            <Text size="3" weight="medium">
-              {user.name}
-            </Text>
-            <Text size="2" color="gray">
-              {user.email}
-            </Text>
+        {/* User Info */}
+        <Flex p="3" direction="column" gap="1">
+          <Text size="3" weight="medium">
+            {user.name}
+          </Text>
+          <Text size="2" color="gray">
+            {user.email}
+          </Text>
+        </Flex>
+
+        <Separator size="4" />
+
+        {/* Theme Selector */}
+        <Flex py="2" px="4" align="center" justify="between" height="48px">
+          <Text size="2" weight="medium">
+            Theme
+          </Text>
+          <Flex gap="2" align="center">
+            <ThemeButton
+              variant={theme === "light" ? "solid" : "ghost"}
+              radius="full"
+              size="1"
+              onClick={() => setTheme("light")}
+            >
+              <SunIcon width="20" height="20" />
+            </ThemeButton>
+            <ThemeButton
+              variant={theme === "dark" ? "solid" : "ghost"}
+              radius="full"
+              size="1"
+              onClick={() => setTheme("dark")}
+            >
+              <MoonIcon width="20" height="20" />
+            </ThemeButton>
+            <ThemeButton
+              variant="ghost"
+              size="1"
+              radius="full"
+              onClick={() => {
+                const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                setTheme(systemTheme);
+              }}
+            >
+              <DesktopIcon width="20" height="20" />
+            </ThemeButton>
           </Flex>
+        </Flex>
 
-          <Separator size="4" />
+        <Separator size="4" />
 
-          {/* Theme Selector */}
-          <Flex py="2" px="4" align="center" justify="between" height="48px">
-            <Text size="2" weight="medium">
-              Theme
-            </Text>
-            <Flex gap="2" align="center">
-              <ThemeButton variant={theme === "light" ? "solid" : "ghost"} radius="full" size="1" onClick={() => setTheme("light")}>
-                <SunIcon width="20" height="20" />
-              </ThemeButton>
-              <ThemeButton variant={theme === "dark" ? "solid" : "ghost"} radius="full" size="1" onClick={() => setTheme("dark")}>
-                <MoonIcon width="20" height="20" />
-              </ThemeButton>
-              <ThemeButton
-                variant="ghost"
-                size="1"
-                radius="full"
-                onClick={() => {
-                  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-                  setTheme(systemTheme);
-                }}
-              >
-                <DesktopIcon width="20" height="20" />
-              </ThemeButton>
-            </Flex>
-          </Flex>
-
-          <Separator size="4" />
-
-          {/* Menu Items */}
-          <DropdownMenuItem asChild>
-            <Link to="/profile">
-              <Flex align="center" gap="3" p="2">
-                <PersonIcon width="16" height="16" />
-                <Text>Profile</Text>
-              </Flex>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem asChild>
-            <Link to="/settings">
-              <Flex align="center" gap="3" p="2">
-                <GearIcon width="16" height="16" />
-                <Text>Settings</Text>
-              </Flex>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem onSelect={onLogout}>
+        {/* Menu Items */}
+        <DropdownMenuItem asChild>
+          <Link to="/profile">
             <Flex align="center" gap="3" p="2">
-              <ExitIcon width="16" height="16" />
-              <Text>Log out</Text>
+              <PersonIcon width="16" height="16" />
+              <Text>Profile</Text>
             </Flex>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
+            <Flex align="center" gap="3" p="2">
+              <GearIcon width="16" height="16" />
+              <Text>Settings</Text>
+            </Flex>
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onSelect={onLogout}>
+          <Flex align="center" gap="3" p="2">
+            <ExitIcon width="16" height="16" />
+            <Text>Log out</Text>
+          </Flex>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
     </DropdownMenu.Root>
   );
 }

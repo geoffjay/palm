@@ -17,7 +17,7 @@ This project uses a custom database migration system built specifically for Bun 
 ## Migration File Structure
 
 ```
-src/db/
+db/
 ├── cli.ts                              # CLI interface
 ├── migrator.ts                         # Core migration engine
 └── migrations/
@@ -31,7 +31,7 @@ src/db/
 Each migration file exports `up` and `down` SQL strings:
 
 ```typescript
-// src/db/migrations/001_create_users_table.ts
+// db/migrations/001_create_users_table.ts
 export const up = `
   CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -158,7 +158,7 @@ DB_PASSWORD=password     # Database password
 bun run migrate:create add_user_preferences
 
 # 2. Edit the generated file
-# src/db/migrations/003_add_user_preferences.ts
+# db/migrations/003_add_user_preferences.ts
 
 # 3. Run the migration
 bun run migrate:up
@@ -207,11 +207,11 @@ The migration system automatically wraps each batch in a transaction, but you ca
 ```typescript
 export const up = `
   BEGIN;
-  
+
   ALTER TABLE users ADD COLUMN temp_column TEXT;
   UPDATE users SET temp_column = 'default_value';
   ALTER TABLE users ALTER COLUMN temp_column SET NOT NULL;
-  
+
   COMMIT;
 `;
 ```
@@ -222,12 +222,12 @@ export const up = `
 export const up = `
   -- Add the new column
   ALTER TABLE users ADD COLUMN full_name VARCHAR(500);
-  
+
   -- Migrate existing data
-  UPDATE users 
+  UPDATE users
   SET full_name = CONCAT(given_name, ' ', family_name)
   WHERE given_name IS NOT NULL AND family_name IS NOT NULL;
-  
+
   -- Add constraints after data migration
   ALTER TABLE users ALTER COLUMN full_name SET NOT NULL;
 `;
@@ -237,7 +237,7 @@ export const up = `
 
 ```typescript
 export const up = `
-  CREATE INDEX CONCURRENTLY idx_users_email_active 
+  CREATE INDEX CONCURRENTLY idx_users_email_active
   ON users(email) WHERE active = true;
 `;
 
@@ -251,7 +251,7 @@ export const down = `
 ### Custom Migration Configuration
 
 ```typescript
-import { DatabaseMigrator } from "./src/db/migrator";
+import { DatabaseMigrator } from "./db/migrator";
 
 const migrator = new DatabaseMigrator({
   host: "custom-host",
@@ -267,7 +267,7 @@ await migrator.migrate();
 ### Programmatic Usage
 
 ```typescript
-import { DatabaseMigrator } from "./src/db/migrator";
+import { DatabaseMigrator } from "./db/migrator";
 
 const migrator = new DatabaseMigrator();
 
@@ -380,12 +380,12 @@ export const down = `
 ```typescript
 // bun run migrate:create add_avatar_url_to_users
 export const up = `
-  ALTER TABLE users 
+  ALTER TABLE users
   ADD COLUMN avatar_url VARCHAR(500);
 `;
 
 export const down = `
-  ALTER TABLE users 
+  ALTER TABLE users
   DROP COLUMN avatar_url;
 `;
 ```
@@ -395,7 +395,7 @@ export const down = `
 ```typescript
 // bun run migrate:create add_email_index_to_users
 export const up = `
-  CREATE INDEX CONCURRENTLY idx_users_email_lower 
+  CREATE INDEX CONCURRENTLY idx_users_email_lower
   ON users(LOWER(email));
 `;
 
