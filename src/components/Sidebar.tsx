@@ -1,4 +1,4 @@
-import { DashboardIcon, MagnifyingGlassIcon, QuestionMarkCircledIcon } from "@radix-ui/react-icons";
+import { DashboardIcon, HeartIcon, MagnifyingGlassIcon, QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 import { Box, Button, Flex, Text, TextField } from "@radix-ui/themes";
 import { Link } from "react-router";
 import styled from "styled-components";
@@ -70,7 +70,7 @@ export function Sidebar({ isOpen, isMobile, onClose }: SidebarProps) {
             {/* Navigation Content */}
             <MainNavigation>
               {/* Search */}
-              <Box mb="6">
+              <Box mb="6" mx="1">
                 <TextField.Root placeholder="Search" size="2" variant="soft">
                   <TextField.Slot>
                     <MagnifyingGlassIcon height="16" width="16" />
@@ -88,6 +88,21 @@ export function Sidebar({ isOpen, isMobile, onClose }: SidebarProps) {
                     <Button variant="ghost" size="2">
                       <DashboardIcon width="16" height="16" />
                       Dashboard
+                    </Button>
+                  </Link>
+                </Flex>
+              </Box>
+
+              {/* Health & Wellness Section */}
+              <Box mb="6" ml="2">
+                <Flex direction="column" gap="3">
+                  <Text size="1" weight="medium" color="gray">
+                    HEALTH & WELLNESS
+                  </Text>
+                  <Link to="/health" onClick={handleLinkClick}>
+                    <Button variant="ghost" size="2">
+                      <HeartIcon width="16" height="16" />
+                      Biometrics
                     </Button>
                   </Link>
                 </Flex>
