@@ -53,7 +53,18 @@ export { schema };
 /**
  * Export types
  */
-export type { NewUser, NewUserSession, User, UserSession } from "./schema";
+export type {
+  BiometricMeasurement,
+  BiometricMeasurementSubtype,
+  BiometricMeasurementType,
+  NewBiometricMeasurement,
+  NewBiometricMeasurementSubtype,
+  NewBiometricMeasurementType,
+  NewUser,
+  NewUserSession,
+  User,
+  UserSession,
+} from "./schema";
 
 /**
  * Close database connection (for cleanup)

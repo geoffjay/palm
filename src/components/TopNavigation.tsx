@@ -1,15 +1,12 @@
 import { DashboardIcon, HamburgerMenuIcon } from "@radix-ui/react-icons";
 import { Box, Button, Flex } from "@radix-ui/themes";
-import type { User } from "../types/user";
 import { UserMenu } from "./UserMenu";
 
 interface TopNavigationProps {
-  user: User;
-  onLogout: () => void;
   onToggleSidebar: () => void;
 }
 
-export function TopNavigation({ user, onLogout, onToggleSidebar }: TopNavigationProps) {
+export function TopNavigation({ onToggleSidebar }: TopNavigationProps) {
   return (
     <Box height="64px" data-testid="top-navigation">
       <Flex justify="between" align="center" height="100%" px="4">
@@ -27,7 +24,7 @@ export function TopNavigation({ user, onLogout, onToggleSidebar }: TopNavigation
         </Flex>
 
         {/* Right side - User Menu */}
-        <UserMenu user={user} onLogout={onLogout} />
+        <UserMenu />
       </Flex>
     </Box>
   );

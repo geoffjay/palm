@@ -7,6 +7,7 @@
 
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { closeDb, db } from "./index";
+import { seedMeasurementTypes } from "./seed";
 
 async function runMigrations() {
   console.log("🚀 Running database migrations...");
@@ -17,6 +18,10 @@ async function runMigrations() {
     });
 
     console.log("✅ Migrations completed successfully!");
+
+    // Run seed data after migrations
+    console.log("🌱 Running seed data...");
+    await seedMeasurementTypes();
   } catch (error) {
     console.error("❌ Migration failed:", error);
     process.exit(1);

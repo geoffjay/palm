@@ -1,18 +1,14 @@
 import { Button, Card, Flex, Heading, Switch, Text } from "@radix-ui/themes";
+import { useUser } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import type { User } from "../types/user";
-import { Layout } from "./Layout";
+import { ProtectedLayout } from "./ProtectedLayout";
 
-interface SettingsPageProps {
-  user: User;
-  onLogout: () => void;
-}
-
-export function SettingsPage({ user, onLogout }: SettingsPageProps) {
+export function SettingsPage() {
+  const user = useUser();
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <Layout user={user} onLogout={onLogout}>
+    <ProtectedLayout title="Settings">
       <Flex direction="column" gap="6">
         {/* Appearance Settings */}
         <Card variant="surface">
@@ -102,6 +98,6 @@ export function SettingsPage({ user, onLogout }: SettingsPageProps) {
           </Flex>
         </Card>
       </Flex>
-    </Layout>
+    </ProtectedLayout>
   );
 }

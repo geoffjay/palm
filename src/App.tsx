@@ -4,6 +4,7 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { ProfilePage } from "./components/ProfilePage";
 import { SettingsPage } from "./components/SettingsPage";
 import { SignInPage } from "./components/SignInPage";
+import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 
 export function App() {
@@ -18,14 +19,16 @@ export function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard user={user} onLogout={logout} />} />
-        <Route path="/profile" element={<ProfilePage user={user} onLogout={logout} />} />
-        <Route path="/settings" element={<SettingsPage user={user} onLogout={logout} />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider user={user} onLogout={logout}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -1,15 +1,12 @@
 import { Avatar, Button, Card, Flex, Heading, Text, TextField } from "@radix-ui/themes";
-import type { User } from "../types/user";
-import { Layout } from "./Layout";
+import { useUser } from "../contexts/AuthContext";
+import { ProtectedLayout } from "./ProtectedLayout";
 
-interface ProfilePageProps {
-  user: User;
-  onLogout: () => void;
-}
+export function ProfilePage() {
+  const user = useUser();
 
-export function ProfilePage({ user, onLogout }: ProfilePageProps) {
   return (
-    <Layout user={user} onLogout={onLogout} title="Profile">
+    <ProtectedLayout title="Profile">
       <Card variant="surface">
         <Flex direction="column" p="6" gap="6">
           <Flex align="center" gap="4">
@@ -61,6 +58,6 @@ export function ProfilePage({ user, onLogout }: ProfilePageProps) {
           </Flex>
         </Flex>
       </Card>
-    </Layout>
+    </ProtectedLayout>
   );
 }

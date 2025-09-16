@@ -1,7 +1,6 @@
 import { Card, Flex } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import type { User } from "../types/user";
 import { Sidebar } from "./Sidebar";
 import { TopNavigation } from "./TopNavigation";
 
@@ -42,12 +41,11 @@ const ScrollableContent = styled.div`
 `;
 
 interface LayoutProps {
-  user: User;
-  onLogout: () => void;
   children: React.ReactNode;
+  title?: string;
 }
 
-export function Layout({ user, onLogout, children }: LayoutProps) {
+export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -79,7 +77,7 @@ export function Layout({ user, onLogout, children }: LayoutProps) {
   return (
     <LayoutContainer direction="column" data-testid="layout">
       {/* Top Navigation */}
-      <TopNavigation user={user} onLogout={onLogout} onToggleSidebar={toggleSidebar} />
+      <TopNavigation onToggleSidebar={toggleSidebar} />
 
       {/* Content Area with Sidebar */}
       <ContentArea flexGrow="1" pb="4">

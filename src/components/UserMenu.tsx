@@ -1,10 +1,9 @@
 import { DesktopIcon, ExitIcon, GearIcon, MoonIcon, PersonIcon, SunIcon } from "@radix-ui/react-icons";
-import { Avatar, Box, Button, DropdownMenu, Flex, Separator, Text } from "@radix-ui/themes";
+import { Avatar, Button, DropdownMenu, Flex, Separator, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
 import styled from "styled-components";
-
+import { useLogout, useUser } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import type { User } from "../types/user";
 
 const DropdownMenuContent = styled(DropdownMenu.Content)`
   margin-top: 2px;
@@ -23,12 +22,9 @@ const ThemeButton = styled(Button)`
   align-items: middle;
 `;
 
-interface UserMenuProps {
-  user: User;
-  onLogout: () => void;
-}
-
-export function UserMenu({ user, onLogout }: UserMenuProps) {
+export function UserMenu() {
+  const user = useUser();
+  const logout = useLogout();
   const { theme, setTheme } = useTheme();
 
   return (
@@ -115,7 +111,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
           </Link>
         </DropdownMenuItem>
 
-        <DropdownMenuItem onSelect={onLogout}>
+        <DropdownMenuItem onSelect={logout}>
           <Flex align="center" gap="3" p="2">
             <ExitIcon width="16" height="16" />
             <Text>Log out</Text>

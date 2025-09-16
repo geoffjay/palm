@@ -1,16 +1,14 @@
 import { Avatar, Button, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 import { Link } from "react-router";
-import type { User } from "../types/user";
-import { Layout } from "./Layout";
+import { useLogout, useUser } from "../contexts/AuthContext";
+import { ProtectedLayout } from "./ProtectedLayout";
 
-interface DashboardProps {
-  user: User;
-  onLogout: () => void;
-}
+export function Dashboard() {
+  const user = useUser();
+  const logout = useLogout();
 
-export function Dashboard({ user, onLogout }: DashboardProps) {
   return (
-    <Layout user={user} onLogout={onLogout} title="Dashboard">
+    <ProtectedLayout title="Dashboard">
       <Flex data-testid="dashboard" direction="column" align="center" width="100%" p="4" height="100%">
         <Flex mb="6">
           <Avatar src={user.picture} alt={user.name} size="6" fallback={user.name.charAt(0).toUpperCase()} />
@@ -91,13 +89,13 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   Settings
                 </Button>
               </Link>
-              <Button onClick={onLogout} variant="outline" color="red">
+              <Button onClick={logout} variant="outline" color="red">
                 Sign Out
               </Button>
             </Flex>
           </Card>
         </Grid>
       </Flex>
-    </Layout>
+    </ProtectedLayout>
   );
 }
