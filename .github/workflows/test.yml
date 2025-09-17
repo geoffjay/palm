@@ -95,6 +95,8 @@ jobs:
 
       - name: 🗃️ Wait for services
         run: |
+          echo "Installing Redis CLI..."
+          sudo apt-get update && sudo apt-get install -y redis-tools
           echo "Waiting for PostgreSQL..."
           timeout 30s bash -c 'until pg_isready -h localhost -p 5432 -U test_user; do sleep 1; done'
           echo "Waiting for Redis..."
@@ -194,7 +196,12 @@ jobs:
 
       - name: 🗃️ Setup database
         run: |
+          echo "Installing Redis CLI..."
+          sudo apt-get update && sudo apt-get install -y redis-tools
+          echo "Waiting for services..."
           timeout 30s bash -c 'until pg_isready -h localhost -p 5432 -U test_user; do sleep 1; done'
+          timeout 30s bash -c 'until redis-cli -h localhost -p 6379 ping; do sleep 1; done'
+          echo "Running database migrations..."
           bun run db:migrate
           bun run db:seed
 
