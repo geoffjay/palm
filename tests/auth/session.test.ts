@@ -103,7 +103,7 @@ describe("SessionManager", () => {
   // The functionality is tested through integration tests
 
   test("extractSessionId - should return null if no session cookie", () => {
-    const sessionManager = new SessionManager();
+    const sessionManager = new SessionManager() as any;
     const mockRequest = {
       headers: {
         get: () => null,

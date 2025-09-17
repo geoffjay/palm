@@ -34,41 +34,15 @@ export class SessionManager {
     // Initialize Redis connection using ioredis
     // Support both REDIS_URL (production) and individual environment variables (development)
     if (process.env.REDIS_URL) {
-      this.redis = new Redis(process.env.REDIS_URL, {
-        connectTimeout: 10000,
-        lazyConnect: true,
-      });
+      this.redis = new Redis(process.env.REDIS_URL);
     } else {
       this.redis = new Redis({
         host: process.env.REDIS_HOST || "localhost",
         port: parseInt(process.env.REDIS_PORT || "6379", 10),
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_DB || "0", 10),
-        connectTimeout: 10000,
-        lazyConnect: true,
       });
     }
-
-    // Add error handling for Redis connection
-    this.redis.on("error", (error) => {
-      console.error("Redis connection error:", error);
-    });
-
-    this.redis.on("connect", () => {
-      console.log("Redis connected successfully");
-    });
-
-    this.redis.on("ready", () => {
-      console.log("Redis connection ready");
-    });
-
-    this.redis.on("close", () => {
-      console.log("Redis connection closed");
-    });
-
-    this.redis.on("reconnecting", () => {
-      console.log("Redis reconnecting...");
-    });
 
     this.config = {
       ttl: parseInt(process.env.SESSION_TTL || "86400", 10), // 24 hours default

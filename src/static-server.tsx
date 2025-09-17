@@ -243,7 +243,7 @@ const server = serve({
     },
 
     // Serve static assets
-    "/chunk-*": async (req) => {
+    "/chunk-*": async (req: Request) => {
       const url = new URL(req.url);
       const fileName = url.pathname.split("/").pop();
       const filePath = path.join(STATIC_DIR, fileName || "");
@@ -254,7 +254,7 @@ const server = serve({
       return new Response("Not Found", { status: 404 });
     },
 
-    "/logo-*": async (req) => {
+    "/logo-*": async (req: Request) => {
       const url = new URL(req.url);
       const fileName = url.pathname.split("/").pop();
       const filePath = path.join(STATIC_DIR, fileName || "");
