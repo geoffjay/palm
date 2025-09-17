@@ -20,6 +20,10 @@ const mockSessionManager = {
     return sessionId === "valid_session";
   }),
   updateSession: mock(async () => true),
+  deleteSession: mock(async () => true),
+  createDeleteCookie: mock(
+    () => "session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict",
+  ),
 };
 
 mock.module("../../src/auth/session", () => ({
@@ -31,6 +35,10 @@ describe("AuthMiddleware", () => {
   let middleware: any;
 
   beforeEach(async () => {
+    // Clear module cache to ensure fresh imports in CI
+    delete require.cache[require.resolve("../../src/auth/middleware")];
+    delete require.cache[require.resolve("../../src/auth/session")];
+
     // Reset the mock functions but keep the module mock
     mockSessionManager.extractSessionId = mock((req: Request) => {
       const cookie = req.headers.get("cookie");
@@ -49,6 +57,10 @@ describe("AuthMiddleware", () => {
       return sessionId === "valid_session";
     });
     mockSessionManager.updateSession = mock(async () => true);
+    mockSessionManager.deleteSession = mock(async () => true);
+    mockSessionManager.createDeleteCookie = mock(
+      () => "session_id=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict",
+    );
 
     const module = await import("../../src/auth/middleware");
     AuthMiddleware = module.AuthMiddleware;
