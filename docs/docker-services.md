@@ -18,7 +18,7 @@ This project uses Docker Compose to manage Redis and PostgreSQL services for loc
 
 - **Purpose**: Primary database for user data
 - **Port**: 5432
-- **Database**: `simplify`
+- **Database**: `palm`
 - **Username**: `user`
 - **Password**: `password`
 - **Volume**: `postgres_data` for data persistence
@@ -111,7 +111,7 @@ The Docker Compose setup uses these environment variables (with defaults):
 
 ```env
 # Database Configuration
-DB_NAME=simplify          # PostgreSQL database name
+DB_NAME=palm          # PostgreSQL database name
 DB_USER=user             # PostgreSQL username
 DB_PASSWORD=password     # PostgreSQL password
 DB_PORT=5432            # PostgreSQL port
@@ -127,8 +127,8 @@ REDIS_DB=0              # Redis database number
 
 Both services use Docker volumes for data persistence:
 
-- **`simplify_redis_data`**: Redis data directory (`/data`)
-- **`simplify_postgres_data`**: PostgreSQL data directory (`/var/lib/postgresql/data`)
+- **`palm_redis_data`**: Redis data directory (`/data`)
+- **`palm_postgres_data`**: PostgreSQL data directory (`/var/lib/postgresql/data`)
 
 Data persists between container restarts unless volumes are explicitly removed.
 
@@ -143,7 +143,7 @@ Health status can be viewed with `docker-compose ps` or `./scripts/docker.sh sta
 
 ## Network Configuration
 
-Services run on a custom bridge network `simplify-network` for:
+Services run on a custom bridge network `palm-network` for:
 
 - Service discovery between containers
 - Isolation from other Docker projects
@@ -211,7 +211,7 @@ When implementing PostgreSQL integration:
 const db = new Bun.sql({
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT || "5432"),
-  database: process.env.DB_NAME || "simplify",
+  database: process.env.DB_NAME || "palm",
   username: process.env.DB_USER || "user",
   password: process.env.DB_PASSWORD || "password",
 });

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Docker management script for Simplify project
+# Docker management script for PaLM project
 # Usage: ./scripts/docker.sh [command]
 
 set -e
@@ -46,22 +46,22 @@ start() {
     print_status "Starting Redis and PostgreSQL services..."
     $COMPOSE_CMD up -d
     print_success "Services started successfully!"
-    
+
     print_status "Waiting for services to be ready..."
     sleep 5
-    
+
     # Check service health
     if $COMPOSE_CMD ps | grep -q "unhealthy"; then
         print_warning "Some services may not be healthy yet. Check with: $0 status"
     else
         print_success "All services are running!"
     fi
-    
+
     echo
     print_status "Service URLs:"
     echo "  Redis: localhost:6379"
     echo "  PostgreSQL: localhost:5432"
-    echo "  Database: simplify"
+    echo "  Database: palm"
     echo "  Username: user"
     echo "  Password: password"
 }
@@ -120,7 +120,7 @@ redis_cli() {
 # Connect to PostgreSQL
 psql() {
     print_status "Connecting to PostgreSQL..."
-    $COMPOSE_CMD exec postgres psql -U user -d simplify
+    $COMPOSE_CMD exec postgres psql -U user -d palm
 }
 
 # Reset database
@@ -130,7 +130,7 @@ reset_db() {
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_status "Resetting database..."
-        $COMPOSE_CMD exec postgres psql -U user -d simplify -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+        $COMPOSE_CMD exec postgres psql -U user -d palm -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
         $COMPOSE_CMD restart postgres
         print_success "Database reset complete!"
     else
@@ -140,7 +140,7 @@ reset_db() {
 
 # Show help
 help() {
-    echo "Docker management script for Simplify project"
+    echo "Docker management script for PaLM project"
     echo
     echo "Usage: $0 [command]"
     echo
@@ -165,7 +165,7 @@ help() {
 # Main script logic
 main() {
     check_docker_compose
-    
+
     case "${1:-help}" in
         start)
             start

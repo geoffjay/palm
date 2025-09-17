@@ -48,7 +48,7 @@ const user = await userService.findByEmail("user@example.com");
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=simplify
+DB_NAME=palm
 DB_USER=user
 DB_PASSWORD=password
 ```

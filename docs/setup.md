@@ -24,7 +24,7 @@
    ./scripts/docker.sh start
 
    # Alternative: Start Redis only
-   docker run -d -p 6379:6379 --name simplify-redis redis:alpine
+   docker run -d -p 6379:6379 --name palm-redis redis:alpine
    ```
 
 3. **Create Environment File**
@@ -167,7 +167,7 @@ Use `./scripts/docker.sh` for easier service management:
 
 - **Redis**: Latest Alpine image on port 6379
 - **PostgreSQL**: Version 16 Alpine on port 5432
-- **Database**: `simplify`
+- **Database**: `palm`
 - **User**: `user`
 - **Password**: `password`
 
@@ -186,7 +186,7 @@ Use `./scripts/docker.sh` for easier service management:
 If you see `ECONNREFUSED 127.0.0.1:6379`, start Redis:
 
 ```bash
-docker run -d -p 6379:6379 --name simplify-redis redis:alpine
+docker run -d -p 6379:6379 --name palm-redis redis:alpine
 ```
 
 ### Port Already in Use

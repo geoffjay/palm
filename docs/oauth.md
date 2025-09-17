@@ -56,7 +56,7 @@ docker run -d -p 6379:6379 redis:alpine
 
 ```bash
 docker run -d \
-  -e POSTGRES_DB=simplify \
+  -e POSTGRES_DB=palm \
   -e POSTGRES_USER=user \
   -e POSTGRES_PASSWORD=password \
   -p 5432:5432 \
@@ -157,17 +157,14 @@ const logout = async () => {
 ### Common Issues
 
 1. **"redirect_uri_mismatch" error**
-
    - Check that the redirect URI in Google Cloud Console matches exactly
    - Include protocol (http/https) and port number for localhost
 
 2. **Redis connection errors**
-
    - Ensure Redis is running on the specified host/port
    - Check Redis credentials if authentication is enabled
 
 3. **Session not persisting**
-
    - Check that cookies are being sent with requests (`credentials: 'include'`)
    - Verify BASE_URL matches your development server URL
 

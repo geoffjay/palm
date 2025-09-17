@@ -1,4 +1,4 @@
-# Simplify - Personal Life Manager
+# Personal Life Manager
 
 A modern personal life management application built with Bun, React, and TypeScript. Track health metrics, visualize trends, and manage your personal data with a clean, intuitive interface.
 
@@ -37,6 +37,12 @@ A modern personal life management application built with Bun, React, and TypeScr
 - **Docker Compose** - Local development services
 - **Drizzle Kit** - Database migrations and introspection
 
+### Testing
+
+- **Bun Test** - Built-in testing framework with TypeScript support
+- **JSDOM** - DOM simulation for React component testing
+- **Comprehensive Test Coverage** - Unit tests, integration tests, and mocks
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -49,7 +55,7 @@ A modern personal life management application built with Bun, React, and TypeScr
 
 ```bash
 git clone <repository-url>
-cd simplify
+cd palm
 bun install
 ```
 
@@ -82,7 +88,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=user
 DB_PASSWORD=password
-DB_NAME=simplify
+DB_NAME=palm
 
 # Redis
 REDIS_HOST=localhost
@@ -123,7 +129,8 @@ The application will be available at `http://localhost:3000`
 ```bash
 # Development
 bun run dev              # Start development server with hot reload
-bun run start            # Start production server
+bun run start            # Start production server (with Bun's native bundling)
+bun run start:static     # Start production server (with pre-built static files)
 
 # Database
 bun run db:generate      # Generate new migration
@@ -140,9 +147,121 @@ bun run format:fix       # Fix formatting issues
 bun run check            # Run all checks
 bun run check:fix        # Fix all issues
 
+# Testing
+bun test                 # Run all tests
+bun run test:watch       # Run tests in watch mode
+bun run test:coverage    # Run tests with coverage report
+
 # Build
-bun run build            # Build for production
+bun run build            # Build static assets for production (outputs to dist/)
 ```
+
+### Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── BiometricsPage.tsx
+│   ├── Dashboard.tsx
+│   ├── AddMeasurementDialog.tsx
+│   └── ...
+├── contexts/           # React contexts
+│   ├── AuthContext.tsx
+│   └── ThemeContext.tsx
+├── hooks/              # Custom React hooks
+│   ├── useAuth.tsx
+│   └── useBiometrics.ts
+├── stores/             # Zustand stores
+│   └── biometricStore.ts
+├── auth/               # Authentication logic
+│   ├── oauth.ts
+│   ├── session.ts
+│   ├── middleware.ts
+│   └── handlers.ts
+├── types/              # TypeScript type definitions
+└── index.tsx           # Main server entry point
+
+db/
+├── schema.ts           # Database schema definitions
+├── migrate.ts          # Migration runner
+├── seed.ts             # Database seeding
+└── services/           # Database service layer
+    ├── userService.ts
+    ├── biometricService.ts
+    └── sessionService.ts
+
+tests/
+├── setup.ts            # Test configuration and utilities
+├── auth/               # Authentication tests
+├── db/services/        # Database service tests
+├── hooks/              # React hooks tests
+├── stores/             # State management tests
+├── api/                # API endpoint tests
+└── utils/              # Utility function tests
+```
+
+## 🧪 Testing
+
+The project includes comprehensive test coverage using Bun's built-in testing framework:
+
+### Test Types
+
+- **Unit Tests**: Individual components, hooks, and services
+- **Integration Tests**: API endpoints and database operations
+- **Mock Tests**: External dependencies and complex integrations
+
+### Running Tests
+
+```bash
+# Run all tests
+bun test
+
+# Run specific test files
+bun test tests/auth/
+bun test tests/stores/biometricStore.test.ts
+
+# Run tests in watch mode (auto-rerun on changes)
+bun run test:watch
+
+# Run with coverage report
+bun run test:coverage
+```
+
+### Test Structure
+
+```bash
+tests/
+├── setup.ts                    # Global test configuration
+├── basic.test.ts              # Smoke tests
+├── auth/
+│   ├── oauth.test.ts          # OAuth flow tests
+│   ├── session.test.ts        # Session management tests
+│   ├── middleware.test.ts     # Auth middleware tests
+│   └── simple-auth.test.ts    # Basic auth logic tests
+├── db/services/
+│   ├── userService.test.ts    # User database operations
+│   └── biometricService.test.ts # Biometric data operations
+├── hooks/
+│   └── useAuth.test.ts        # React authentication hooks
+├── stores/
+│   └── biometricStore.test.ts # Zustand state management
+├── api/
+│   └── endpoints.test.ts      # API endpoint integration tests
+└── utils/
+    ├── testHelpers.ts         # Test utilities and mocks
+    └── validation.test.ts     # Utility function tests
+```
+
+### Test Coverage
+
+The test suite covers:
+
+- ✅ Authentication flows (OAuth, sessions, middleware)
+- ✅ Database services (users, biometrics, CRUD operations)
+- ✅ State management (Zustand stores)
+- ✅ API endpoints (CRUD, error handling, authentication)
+- ✅ Utility functions (validation, formatting)
+- ✅ Mock implementations for external dependencies
 
 ## 🔐 Google OAuth Setup
 
@@ -213,27 +332,6 @@ docker-compose logs -f      # View service logs
 - `GET /api/biometrics/types` - Get measurement types
 - `DELETE /api/biometrics/measurements/:id` - Delete measurement
 
-## 🧪 Testing
-
-```bash
-# Run tests
-bun test
-
-# Run tests in watch mode
-bun test --watch
-
-# Run specific test file
-bun test src/components/__tests__/BiometricsPage.test.tsx
-```
-
-## 📚 Additional Documentation
-
-- [Setup Guide](docs/setup.md) - Detailed development setup
-- [OAuth Configuration](docs/oauth.md) - Google OAuth setup guide
-- [Docker Services](docs/docker-services.md) - Docker configuration details
-- [Migration System](docs/migrations.md) - Database migration guide
-- [Technologies](docs/technologies.md) - Technology stack details
-
 ## 🚨 Troubleshooting
 
 ### Common Issues
@@ -242,7 +340,7 @@ bun test src/components/__tests__/BiometricsPage.test.tsx
 
 ```bash
 # Start Redis container
-docker run -d -p 6379:6379 --name simplify-redis redis:alpine
+docker run -d -p 6379:6379 --name palm-redis redis:alpine
 ```
 
 **Port Already in Use**
@@ -264,6 +362,55 @@ docker-compose down
 docker-compose up -d
 bun run db:migrate
 ```
+
+**Test Failures**
+
+```bash
+# Run tests with verbose output
+bun test --verbose
+
+# Run specific failing test
+bun test tests/path/to/specific.test.ts
+```
+
+## 🏗️ Build System
+
+### Development vs Production
+
+The project supports two deployment modes:
+
+**Development Mode:**
+
+- Uses Bun's native HTML imports with HMR
+- No build step required
+- All bundling happens at runtime
+- Perfect for development with instant updates
+
+```bash
+bun run dev  # Start with hot reloading
+```
+
+**Production Mode:**
+
+- Option 1: Use Bun's native bundling (faster startup)
+  ```bash
+  bun run start  # Runtime bundling
+  ```
+- Option 2: Use pre-built static assets (optimized for CDN/caching)
+  ```bash
+  bun run build       # Build static assets to dist/
+  bun run start:static # Serve pre-built assets
+  ```
+
+**Benefits of `build.ts`:**
+
+- 🚀 **Minification & Bundling**: Combines 26+ source files into optimized chunks
+- 📦 **Asset Optimization**: Fingerprinted filenames for cache busting
+- 🔒 **Source Maps**: Production debugging support
+- ⚡ **Performance**: Fewer HTTP requests, smaller bundle sizes
+- 🏭 **CDN Ready**: Static assets can be served by CDN/nginx
+- 🎯 **Tree Shaking**: Dead code elimination
+- 💾 **TailwindCSS**: CSS purging and optimization
 
 ## 🚀 Production Deployment
 
@@ -288,10 +435,57 @@ bun run db:migrate
    - Update OAuth redirect URIs
 
 4. **Build and Deploy**
+
+   **Option A: Runtime bundling (faster deployment)**
+
    ```bash
-   bun run build
    bun start
    ```
+
+   **Option B: Pre-built assets (optimized for scale)**
+
+   ```bash
+   bun run build
+   bun run start:static
+   ```
+
+## 🤖 Continuous Integration
+
+The project includes comprehensive GitHub Actions workflows:
+
+### 🧪 **Test Suite** (`test.yml`)
+
+- **Triggers**: Push to main/develop, Pull Requests to main/develop, Manual
+- **Focus**: Pure functionality testing (no linting - handled by PR checks)
+- **Matrix Testing**: Multiple Bun versions (1.2.17, latest)
+- **Services**: PostgreSQL 15, Redis 7
+- **Coverage**: Unit tests, integration tests, Docker validation
+- **Reporting**: Codecov integration for coverage reports
+
+### 🔍 **Pull Request Checks** (`pr-checks.yml`)
+
+- **Triggers**: All Pull Requests (fast ~3min feedback)
+- **Code Quality**: Linting, formatting, TypeScript validation
+- **Build Verification**: Ensures build process works
+- **Security Audit**: Basic dependency vulnerability scanning
+- **PR Analytics**: File changes, dependency analysis, bundle size reports
+- **Smart Separation**: Handles all code quality checks so test suite can focus on functionality
+
+### 🔒 **Security & Dependencies** (`security.yml`)
+
+- **Schedule**: Weekly security audits (Sundays 2 AM UTC)
+- **CodeQL Analysis**: Static security analysis
+- **Dependency Review**: License compliance checks
+- **Bundle Analysis**: Performance impact assessment
+
+### 📊 **Workflow Features**
+
+- ✅ **Parallel Execution**: Concurrent job processing
+- ✅ **Service Integration**: Real database/Redis testing
+- ✅ **Matrix Testing**: Multiple environment validation
+- ✅ **Docker Testing**: Container build verification
+- ✅ **Coverage Reporting**: Test coverage tracking
+- ✅ **Security Scanning**: Automated vulnerability detection
 
 ## 📄 License
 

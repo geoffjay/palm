@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "bun --hot src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
+    "start:static": "NODE_ENV=production bun src/static-server.tsx",
     "build": "bun run build.ts",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
@@ -20,7 +21,10 @@
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
     "db:migrate": "bun db/migrate.ts",
-    "db:seed": "bun db/seed.ts"
+    "db:seed": "bun db/seed.ts",
+    "test": "bun test --preload ./tests/setup.ts",
+    "test:watch": "bun test --watch --preload ./tests/setup.ts",
+    "test:coverage": "bun test --coverage --preload ./tests/setup.ts"
   },
   "dependencies": {
     "@nivo/core": "^0.99.0",
@@ -56,10 +60,14 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.2",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/react-hooks": "^8.0.1",
     "@types/bun": "latest",
     "@types/ioredis": "^5.0.0",
+    "@types/jsdom": "^21.1.7",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/styled-components": "^5.1.34"
+    "@types/styled-components": "^5.1.34",
+    "jsdom": "^25.0.1"
   }
 }

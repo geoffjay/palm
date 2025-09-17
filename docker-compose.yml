@@ -1,7 +1,7 @@
 services:
   redis:
     image: redis:7-alpine
-    container_name: simplify-redis
+    container_name: palm-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -14,14 +14,14 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - simplify-network
+      - palm-network
 
   postgres:
     image: postgres:16-alpine
-    container_name: simplify-postgres
+    container_name: palm-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-simplify}
+      POSTGRES_DB: ${DB_NAME:-palm}
       POSTGRES_USER: ${DB_USER:-user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
@@ -30,13 +30,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-simplify}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-palm}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - simplify-network
+      - palm-network
 
 volumes:
   redis_data:
@@ -45,5 +44,5 @@ volumes:
     driver: local
 
 networks:
-  simplify-network:
+  palm-network:
     driver: bridge

@@ -142,9 +142,9 @@ bun run migrate:reset
 The migration system uses these environment variables:
 
 ```env
-DB_HOST=localhost         # Database host
+DB_HOST=localhost        # Database host
 DB_PORT=5432             # Database port
-DB_NAME=simplify         # Database name
+DB_NAME=palm             # Database name
 DB_USER=user             # Database username
 DB_PASSWORD=password     # Database password
 ```

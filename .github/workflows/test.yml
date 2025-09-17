@@ -29,7 +29,7 @@ jobs:
         env:
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: simplify_test
+          POSTGRES_DB: palm_test
           POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
@@ -59,7 +59,7 @@ jobs:
       DB_PORT: 5432
       DB_USER: test_user
       DB_PASSWORD: test_password
-      DB_NAME: simplify_test
+      DB_NAME: palm_test
 
       # Redis configuration
       REDIS_HOST: localhost
@@ -143,7 +143,7 @@ jobs:
         env:
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: simplify_test
+          POSTGRES_DB: palm_test
           POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
@@ -170,7 +170,7 @@ jobs:
       DB_PORT: 5432
       DB_USER: test_user
       DB_PASSWORD: test_password
-      DB_NAME: simplify_test
+      DB_NAME: palm_test
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       REDIS_DB: 1
@@ -249,7 +249,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          tags: simplify:test
+          tags: palm:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -262,7 +262,7 @@ jobs:
           docker run -d --name test-postgres --network test-network \
             -e POSTGRES_USER=test_user \
             -e POSTGRES_PASSWORD=test_password \
-            -e POSTGRES_DB=simplify_test \
+            -e POSTGRES_DB=palm_test \
             -e POSTGRES_HOST_AUTH_METHOD=trust \
             postgres:15-alpine
 
@@ -280,13 +280,13 @@ jobs:
             -e DB_PORT=5432 \
             -e DB_USER=test_user \
             -e DB_PASSWORD=test_password \
-            -e DB_NAME=simplify_test \
+            -e DB_NAME=palm_test \
             -e REDIS_HOST=test-redis \
             -e REDIS_PORT=6379 \
             -e GOOGLE_CLIENT_ID=test_client_id \
             -e GOOGLE_CLIENT_SECRET=test_client_secret \
             -e BASE_URL=http://localhost:3000 \
-            simplify:test
+            palm:test
 
           # Wait for application to start
           sleep 10
