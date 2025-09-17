@@ -279,7 +279,15 @@ const server = serve({
   development: false,
 });
 
+// Debug environment variables
+console.log(`🔧 Environment: ${process.env.NODE_ENV || "development"}`);
+console.log(`🔧 BASE_URL: ${process.env.BASE_URL || "not set"}`);
+console.log(`🔧 FRONTEND_URL: ${process.env.FRONTEND_URL || "not set"}`);
+
+const baseUrl = process.env.BASE_URL || server.url.toString();
+const frontendUrl = process.env.FRONTEND_URL || server.url.toString();
+
 console.log(`🚀 Static server running at ${server.url}`);
-console.log(`📱 Frontend available at ${server.url}`);
-console.log(`🔐 OAuth login at ${server.url}auth/google`);
+console.log(`📱 Frontend available at ${frontendUrl}`);
+console.log(`🔐 OAuth login at ${baseUrl}/auth/google`);
 console.log(`📦 Built files: ${STATIC_DIR}`);
