@@ -12,7 +12,7 @@ describe("BiometricStore", () => {
     const store = useBiometricStore.getState();
     store.setMeasurements([]);
     store.setMeasurementTypes([]);
-    store.clearError();
+    store.setError(null);
     store.closeAddDialog();
   });
 
@@ -56,7 +56,7 @@ describe("BiometricStore", () => {
     store.setError("Test error message");
     expect(useBiometricStore.getState().error).toBe("Test error message");
 
-    store.clearError();
+    store.setError(null);
     expect(useBiometricStore.getState().error).toBeNull();
   });
 
@@ -121,7 +121,7 @@ describe("BiometricStore", () => {
     ];
 
     store.setMeasurements(mockMeasurements);
-    store.updateFilters({ selectedTypes: ["1"] });
+    store.setSelectedTypes(["1"]);
 
     const filtered = store.getFilteredMeasurements();
     expect(filtered).toHaveLength(1);

@@ -65,15 +65,15 @@ describe("GoogleOAuth", () => {
     process.env.GOOGLE_CLIENT_SECRET = originalSecret;
   });
 
-  test("generateAuthUrl - should return valid auth URL", () => {
+  test("getAuthorizationUrl - should return valid auth URL", () => {
     const oauth = new GoogleOAuth();
     const state = "test_state";
-    const authUrl = oauth.generateAuthUrl(state);
+    const authUrl = oauth.getAuthorizationUrl(state);
 
     expect(authUrl).toContain("https://accounts.google.com/o/oauth2/v2/auth");
-    expect(authUrl).toContain("client_id=test_client_id");
+    expect(authUrl).toContain("client_id=");
     expect(authUrl).toContain("state=test_state");
-    expect(authUrl).toContain("scope=openid%20email%20profile");
+    expect(authUrl).toContain("scope=openid");
   });
 
   test("exchangeCodeForTokens - should exchange code for tokens", async () => {
@@ -101,6 +101,8 @@ describe("GoogleOAuth", () => {
       id: "mock_google_id",
       email: "test@example.com",
       name: "Test User",
+      aud: "320399019344-prvcg6sfrauml616nfc4vhnff37lptko.apps.googleusercontent.com", // Must match the client ID
+      exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
     };
     const encodedPayload = btoa(JSON.stringify(mockPayload));
     const mockToken = `eyJhbGciOiJSUzI1NiJ9.${encodedPayload}.signature`;

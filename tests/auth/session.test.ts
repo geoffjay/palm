@@ -4,6 +4,7 @@ import { testUtils } from "../setup";
 // Mock Redis
 const mockRedis = {
   set: mock(async () => "OK"),
+  setex: mock(async () => "OK"),
   get: mock(async (key: string) => {
     if (key.includes("test_session")) {
       return JSON.stringify(testUtils.createMockSessionData());
@@ -25,7 +26,15 @@ describe("SessionManager", () => {
   let SessionManager: { new (): unknown };
 
   beforeEach(async () => {
-    mock.restore();
+    // Reset mock functions
+    mockRedis.setex = mock(async () => "OK");
+    mockRedis.get = mock(async (key: string) => {
+      if (key.includes("test_session")) {
+        return JSON.stringify(testUtils.createMockSessionData());
+      }
+      return null;
+    });
+
     const module = await import("../../src/auth/session");
     SessionManager = module.SessionManager;
   });
@@ -42,7 +51,7 @@ describe("SessionManager", () => {
     const sessionId = await sessionManager.createSession(sessionData);
 
     expect(sessionId).toBeTruthy();
-    expect(sessionId).toHaveLength(32); // UUID without hyphens
+    expect(sessionId).toHaveLength(64); // 32 bytes as hex string
   });
 
   test("getSession - should retrieve existing session", async () => {

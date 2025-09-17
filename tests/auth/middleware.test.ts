@@ -57,7 +57,7 @@ describe("AuthMiddleware", () => {
     const authenticatedRequest = await middleware.authenticate(mockRequest);
 
     expect(authenticatedRequest.user).toBeUndefined();
-    expect(authenticatedRequest.sessionId).toBeNull();
+    expect(authenticatedRequest.sessionId).toBeUndefined();
   });
 
   test("requireAuth - should return 401 for unauthenticated request", async () => {
@@ -149,7 +149,10 @@ describe("AuthMiddleware", () => {
     const middleware = new AuthMiddleware();
     const mockHandler = mock(async () => new Response("success"));
 
-    const composedHandler = middleware.compose(middleware.csrf, middleware.requireAuth)(mockHandler);
+    const composedHandler = middleware.compose(
+      middleware.csrf.bind(middleware),
+      middleware.requireAuth.bind(middleware),
+    )(mockHandler);
 
     const mockRequest = new Request("http://localhost/test", {
       method: "POST",

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import "../setup"; // Import DOM setup
 
 // Mock fetch globally
 global.fetch = mock(async (url: string, options?: RequestInit) => {
@@ -61,9 +62,10 @@ describe("useAuth", () => {
   });
 
   test("should set user data after successful authentication check", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth());
 
-    await waitForNextUpdate();
+    // Wait for the effect to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.loading).toBe(false);
     expect(result.current.authenticated).toBe(true);
@@ -73,9 +75,10 @@ describe("useAuth", () => {
   test("should handle authentication failure", async () => {
     global.fetch = mock(async () => new Response("Unauthorized", { status: 401 }));
 
-    const { result, waitForNextUpdate } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth());
 
-    await waitForNextUpdate();
+    // Wait for the effect to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.loading).toBe(false);
     expect(result.current.authenticated).toBe(false);
@@ -93,10 +96,10 @@ describe("useAuth", () => {
   });
 
   test("should logout user and clear state", async () => {
-    const { result, waitForNextUpdate } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth());
 
     // Wait for initial auth check
-    await waitForNextUpdate();
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     await act(async () => {
       await result.current.logout();
@@ -130,9 +133,10 @@ describe("useAuth", () => {
       throw new Error("Network error");
     });
 
-    const { result, waitForNextUpdate } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth());
 
-    await waitForNextUpdate();
+    // Wait for the effect to complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(result.current.loading).toBe(false);
     expect(result.current.authenticated).toBe(false);

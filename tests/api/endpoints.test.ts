@@ -34,8 +34,8 @@ const mockUserService = {
 
 // Mock the auth middleware
 const mockAuthMiddleware = {
-  requireAuth: mock((handler: (req: { user?: unknown; url: string }) => Promise<Response>) => {
-    return async (req: { user?: unknown; url: string }) => {
+  requireAuth: mock((handler: (req: { user?: any; url: string; json?: () => Promise<any> }) => Promise<Response>) => {
+    return async (req: { user?: any; url: string; json?: () => Promise<any> }) => {
       // Simulate authenticated request
       req.user = testUtils.createMockSessionData();
       return handler(req);
@@ -55,7 +55,13 @@ mock.module("../../src/auth/middleware", () => ({
 
 describe("API Endpoints", () => {
   beforeEach(() => {
-    mock.restore();
+    // Reset the mocks to their default state
+    mockUserService.findByGoogleId = mock(async (googleId: string) => {
+      if (googleId === "test_google_id") {
+        return { id: 1, ...testUtils.createMockUser() };
+      }
+      return null;
+    });
   });
 
   describe("GET /api/biometrics/types", () => {
@@ -184,7 +190,7 @@ describe("API Endpoints", () => {
 
   describe("POST /api/biometrics/measurements", () => {
     test("should create simple measurement", async () => {
-      const handler = mockAuthMiddleware.requireAuth(async (req: { url: string }) => {
+      const handler = mockAuthMiddleware.requireAuth(async (req: any) => {
         const body = await req.json();
         const { typeName, value, measuredAt, notes } = body;
 
@@ -226,7 +232,7 @@ describe("API Endpoints", () => {
     });
 
     test("should create blood pressure measurement", async () => {
-      const handler = mockAuthMiddleware.requireAuth(async (req: { url: string }) => {
+      const handler = mockAuthMiddleware.requireAuth(async (req: any) => {
         const body = await req.json();
         const { typeName, systolic, diastolic, measuredAt, notes } = body;
 
@@ -273,7 +279,7 @@ describe("API Endpoints", () => {
     });
 
     test("should return 400 for invalid measurement data", async () => {
-      const handler = mockAuthMiddleware.requireAuth(async (req: { url: string }) => {
+      const handler = mockAuthMiddleware.requireAuth(async (req: any) => {
         const body = await req.json();
         const { typeName, value, systolic, diastolic } = body;
 

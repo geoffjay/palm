@@ -138,6 +138,23 @@ export class SessionManager {
   }
 
   /**
+   * Validate if a session is still active and not expired
+   */
+  async validateSession(sessionId: string): Promise<boolean> {
+    if (!sessionId) return false;
+
+    const sessionData = await this.getSession(sessionId);
+    if (!sessionData) return false;
+
+    // Check if session is expired (beyond TTL)
+    const now = Date.now();
+    const sessionAge = now - sessionData.createdAt;
+    const maxAge = this.config.ttl * 1000; // Convert to milliseconds
+
+    return sessionAge <= maxAge;
+  }
+
+  /**
    * Create session cookie header
    */
   createSessionCookie(sessionId: string): string {
