@@ -122,7 +122,7 @@ jobs:
           du -sh dist/*
 
       - name: 📊 Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         if: matrix.bun-version == 'latest'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
