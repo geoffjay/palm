@@ -27,16 +27,35 @@ mock.module("../../src/auth/session", () => ({
 }));
 
 describe("AuthMiddleware", () => {
-  let AuthMiddleware: { new (): unknown };
+  let AuthMiddleware: { new (): any };
+  let middleware: any;
 
   beforeEach(async () => {
-    mock.restore();
+    // Reset the mock functions but keep the module mock
+    mockSessionManager.extractSessionId = mock((req: Request) => {
+      const cookie = req.headers.get("cookie");
+      if (cookie?.includes("session_id=valid_session")) {
+        return "valid_session";
+      }
+      return null;
+    });
+    mockSessionManager.getSession = mock(async (sessionId: string) => {
+      if (sessionId === "valid_session") {
+        return testUtils.createMockSessionData();
+      }
+      return null;
+    });
+    mockSessionManager.validateSession = mock(async (sessionId: string) => {
+      return sessionId === "valid_session";
+    });
+    mockSessionManager.updateSession = mock(async () => true);
+
     const module = await import("../../src/auth/middleware");
     AuthMiddleware = module.AuthMiddleware;
+    middleware = new AuthMiddleware();
   });
 
   test("authenticate - should add user data to request for valid session", async () => {
-    const middleware = new AuthMiddleware();
     const mockRequest = new Request("http://localhost/test", {
       headers: { cookie: "session_id=valid_session" },
     });
@@ -49,7 +68,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("authenticate - should not add user data for invalid session", async () => {
-    const middleware = new AuthMiddleware();
     const mockRequest = new Request("http://localhost/test", {
       headers: { cookie: "session_id=invalid_session" },
     });
@@ -61,7 +79,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("requireAuth - should return 401 for unauthenticated request", async () => {
-    const middleware = new AuthMiddleware();
     const mockHandler = mock(async () => new Response("success"));
     const protectedHandler = middleware.requireAuth(mockHandler);
 
@@ -73,7 +90,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("requireAuth - should call handler for authenticated request", async () => {
-    const middleware = new AuthMiddleware();
     const mockHandler = mock(async () => new Response("success"));
     const protectedHandler = middleware.requireAuth(mockHandler);
 
@@ -87,7 +103,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("optionalAuth - should call handler regardless of authentication", async () => {
-    const middleware = new AuthMiddleware();
     const mockHandler = mock(async (req: { user?: unknown }) => {
       return Response.json({ authenticated: !!req.user });
     });
@@ -111,7 +126,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("csrf - should reject requests without CSRF header", async () => {
-    const middleware = new AuthMiddleware();
     const mockHandler = mock(async () => new Response("success"));
     const csrfProtectedHandler = middleware.csrf(mockHandler);
 
@@ -127,7 +141,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("csrf - should allow requests with valid CSRF header", async () => {
-    const middleware = new AuthMiddleware();
     const mockHandler = mock(async () => new Response("success"));
     const csrfProtectedHandler = middleware.csrf(mockHandler);
 
@@ -146,7 +159,6 @@ describe("AuthMiddleware", () => {
   });
 
   test("compose - should chain multiple middleware functions", async () => {
-    const middleware = new AuthMiddleware();
     const mockHandler = mock(async () => new Response("success"));
 
     const composedHandler = middleware.compose(
