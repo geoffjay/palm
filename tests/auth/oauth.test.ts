@@ -101,7 +101,7 @@ describe("GoogleOAuth", () => {
       id: "mock_google_id",
       email: "test@example.com",
       name: "Test User",
-      aud: "320399019344-prvcg6sfrauml616nfc4vhnff37lptko.apps.googleusercontent.com", // Must match the client ID
+      aud: process.env.GOOGLE_CLIENT_ID, // Use the actual client ID from environment
       exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
     };
     const encodedPayload = btoa(JSON.stringify(mockPayload));
