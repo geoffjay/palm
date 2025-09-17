@@ -151,7 +151,7 @@ export const useBiometricStore = create<BiometricStore>()(
       }),
 
     clearFilters: () =>
-      set((state) => ({
+      set((_state) => ({
         filters: {
           dateRange: { start: null, end: null },
           selectedTypes: [],
@@ -171,10 +171,12 @@ export const useBiometricStore = create<BiometricStore>()(
 
       // Filter by date range
       if (filters.dateRange.start) {
-        filtered = filtered.filter((m) => new Date(m.measuredAt) >= filters.dateRange.start!);
+        const startDate = filters.dateRange.start;
+        filtered = filtered.filter((m) => new Date(m.measuredAt) >= startDate);
       }
       if (filters.dateRange.end) {
-        filtered = filtered.filter((m) => new Date(m.measuredAt) <= filters.dateRange.end!);
+        const endDate = filters.dateRange.end;
+        filtered = filtered.filter((m) => new Date(m.measuredAt) <= endDate);
       }
 
       // Filter by selected types
@@ -202,7 +204,7 @@ export const useBiometricStore = create<BiometricStore>()(
             if (!subtypeGroups.has(measurement.measurementSubtypeId)) {
               subtypeGroups.set(measurement.measurementSubtypeId, []);
             }
-            subtypeGroups.get(measurement.measurementSubtypeId)!.push({
+            subtypeGroups.get(measurement.measurementSubtypeId)?.push({
               x: new Date(measurement.measuredAt).toISOString(),
               y: parseFloat(measurement.value),
               measurement,
@@ -256,7 +258,10 @@ export const useBiometricStore = create<BiometricStore>()(
             notes: point.measurement.notes || undefined,
           });
         } else {
-          readingsMap.get(key)!.systolic = point.y;
+          const reading = readingsMap.get(key);
+          if (reading) {
+            reading.systolic = point.y;
+          }
         }
       });
 
@@ -271,7 +276,10 @@ export const useBiometricStore = create<BiometricStore>()(
             notes: point.measurement.notes || undefined,
           });
         } else {
-          readingsMap.get(key)!.diastolic = point.y;
+          const reading = readingsMap.get(key);
+          if (reading) {
+            reading.diastolic = point.y;
+          }
         }
       });
 

@@ -34,13 +34,13 @@ const server = serve({
 
     // Public API routes
     "/api/hello": {
-      async GET(req) {
+      async GET(_req) {
         return Response.json({
           message: "Hello, world!",
           method: "GET",
         });
       },
-      async PUT(req) {
+      async PUT(_req) {
         return Response.json({
           message: "Hello, world!",
           method: "PUT",
@@ -57,7 +57,7 @@ const server = serve({
 
     // Protected API routes
     "/api/user/profile": {
-      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         return Response.json({
           message: "User profile data",
           user: {
@@ -71,7 +71,7 @@ const server = serve({
     },
 
     "/api/user/settings": {
-      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         return Response.json({
           message: "User settings",
           userId: req.user.userId,
@@ -81,7 +81,7 @@ const server = serve({
       PUT: authMiddleware.compose(
         authMiddleware.csrf,
         authMiddleware.requireAuth,
-      )(async (req: AuthenticatedRequest & { user: any }) => {
+      )(async (req: AuthenticatedRequest) => {
         const body = await req.json();
 
         return Response.json({
@@ -112,7 +112,7 @@ const server = serve({
 
     // Biometric API endpoints
     "/api/biometrics/types": {
-      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+      GET: authMiddleware.requireAuth(async (_req: AuthenticatedRequest) => {
         const { biometricService } = await import("../db/services");
         try {
           const types = await biometricService.getAllMeasurementTypes();
@@ -125,10 +125,11 @@ const server = serve({
     },
 
     "/api/biometrics/subtypes/:typeId": {
-      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         const { biometricService } = await import("../db/services");
         try {
-          const typeId = parseInt(req.params.typeId);
+          const url = new URL(req.url);
+          const typeId = parseInt(url.pathname.split("/").pop() || "0", 10);
           const subtypes = await biometricService.getSubtypesForType(typeId);
           return Response.json({ subtypes });
         } catch (error) {
@@ -139,7 +140,7 @@ const server = serve({
     },
 
     "/api/biometrics/measurements": {
-      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         const { biometricService, userService } = await import("../db/services");
         try {
           // Get database user ID from Google ID
@@ -174,7 +175,7 @@ const server = serve({
           return Response.json({ error: "Failed to fetch measurements" }, { status: 500 });
         }
       }),
-      POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+      POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         const { biometricService, userService } = await import("../db/services");
         try {
           const body = await req.json();
@@ -220,7 +221,10 @@ const server = serve({
           }
         } catch (error) {
           console.error("Error adding measurement:", error);
-          return Response.json({ error: error.message || "Failed to add measurement" }, { status: 500 });
+          return Response.json(
+            { error: error instanceof Error ? error.message : "Failed to add measurement" },
+            { status: 500 },
+          );
         }
       }),
     },

@@ -4,7 +4,6 @@
  */
 
 import { ResponsiveLine } from "@nivo/line";
-import { ResponsiveScatterPlot } from "@nivo/scatterplot";
 import { PlusIcon } from "@radix-ui/react-icons";
 import { Button, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 import { useBiometrics, useBloodPressure, useHeartRate } from "../hooks/useBiometrics";
@@ -60,17 +59,15 @@ export function BiometricsPage() {
           <OverviewCard title="Total Measurements" value={measurements.length.toString()} />
           <OverviewCard
             title="Heart Rate Readings"
-            value={measurements.filter((m) => m.measurementType.name === "heart_rate").length.toString()}
+            value={measurements.filter((m) => m.measurementTypeId === 2).length.toString()}
           />
           <OverviewCard
             title="Blood Pressure Readings"
-            value={Math.ceil(
-              measurements.filter((m) => m.measurementType.name === "blood_pressure").length / 2,
-            ).toString()}
+            value={Math.ceil(measurements.filter((m) => m.measurementTypeId === 1).length / 2).toString()}
           />
           <OverviewCard
             title="Weight Measurements"
-            value={measurements.filter((m) => m.measurementType.name === "weight").length.toString()}
+            value={measurements.filter((m) => m.measurementTypeId === 3).length.toString()}
           />
         </Grid>
 
@@ -265,7 +262,19 @@ function BloodPressureChart() {
   );
 }
 
-function RecentMeasurements({ measurements }: { measurements: any[] }) {
+interface MeasurementData {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: number;
+  measurementTypeId: number;
+  measurementSubtypeId: number | null;
+  value: string;
+  notes: string | null;
+  measuredAt: Date;
+}
+
+function RecentMeasurements({ measurements }: { measurements: MeasurementData[] }) {
   if (measurements.length === 0) {
     return (
       <Card variant="surface">
@@ -298,12 +307,7 @@ function RecentMeasurements({ measurements }: { measurements: any[] }) {
               }}
             >
               <Flex direction="column" gap="1">
-                <Text weight="medium">
-                  {measurement.measurementType.displayName}
-                  {measurement.measurementSubtype && (
-                    <Text color="gray"> - {measurement.measurementSubtype.displayName}</Text>
-                  )}
-                </Text>
+                <Text weight="medium">Type {measurement.measurementTypeId}</Text>
                 <Text size="2" color="gray">
                   {new Date(measurement.measuredAt).toLocaleDateString()} at{" "}
                   {new Date(measurement.measuredAt).toLocaleTimeString([], {
@@ -312,9 +316,7 @@ function RecentMeasurements({ measurements }: { measurements: any[] }) {
                   })}
                 </Text>
               </Flex>
-              <Text weight="bold">
-                {measurement.value} {measurement.measurementType.unit}
-              </Text>
+              <Text weight="bold">{measurement.value}</Text>
             </Flex>
           ))}
         </Flex>

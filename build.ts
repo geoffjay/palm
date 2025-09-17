@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
+import { existsSync } from "node:fs";
+import { rm } from "node:fs/promises";
+import path from "node:path";
 import { type BuildConfig, build } from "bun";
 import plugin from "bun-plugin-tailwind";
-import { existsSync } from "fs";
-import { rm } from "fs/promises";
-import path from "path";
 
 // Print help text if requested
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
@@ -41,7 +41,7 @@ const toCamelCase = (str: string): string => {
 };
 
 // Helper function to parse a value into appropriate type
-const parseValue = (value: string): any => {
+const parseValue = (value: string): string | number | boolean | string[] => {
   // Handle true/false strings
   if (value === "true") return true;
   if (value === "false") return false;
@@ -59,7 +59,7 @@ const parseValue = (value: string): any => {
 
 // Magical argument parser that converts CLI args to BuildConfig
 function parseArgs(): Partial<BuildConfig> {
-  const config: Record<string, any> = {};
+  const config: Record<string, string | number | boolean | string[]> = {};
   const args = process.argv.slice(2);
 
   for (let i = 0; i < args.length; i++) {

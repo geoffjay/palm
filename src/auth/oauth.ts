@@ -30,9 +30,19 @@ export class GoogleOAuth {
   private config: OAuthConfig;
 
   constructor() {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId) {
+      throw new Error("GOOGLE_CLIENT_ID environment variable is required");
+    }
+    if (!clientSecret) {
+      throw new Error("GOOGLE_CLIENT_SECRET environment variable is required");
+    }
+
     this.config = {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId,
+      clientSecret,
       redirectUri: `${process.env.BASE_URL}/auth/google/callback`,
       scopes: ["openid", "email", "profile"],
     };
@@ -116,7 +126,7 @@ export class GoogleOAuth {
   /**
    * Verify and decode Google ID token (basic verification)
    */
-  async verifyIdToken(idToken: string): Promise<any> {
+  async verifyIdToken(idToken: string): Promise<GoogleUserInfo> {
     // For production, you should use a proper JWT library or Google's verification
     // This is a simplified implementation
     const parts = idToken.split(".");

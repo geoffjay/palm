@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { User } from "../types/user";
 
 interface AuthState {
@@ -14,7 +14,7 @@ export function useAuth() {
     authenticated: false,
   });
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       setAuthState((prev) => ({ ...prev, loading: true }));
 
@@ -46,7 +46,7 @@ export function useAuth() {
         authenticated: false,
       });
     }
-  };
+  }, []);
 
   const logout = async () => {
     try {
@@ -71,7 +71,7 @@ export function useAuth() {
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
   return {
     ...authState,

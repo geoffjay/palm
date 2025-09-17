@@ -9,20 +9,13 @@ import { useAddMeasurement } from "../hooks/useBiometrics";
 import { useBiometricStore } from "../stores/biometricStore";
 
 export function AddMeasurementDialog() {
-  const {
-    isAddDialogOpen,
-    closeAddDialog,
-    measurementTypes,
-    measurementSubtypes,
-    getMeasurementTypeByName,
-    getSubtypesForType,
-  } = useBiometricStore();
+  const { isAddDialogOpen, closeAddDialog, measurementTypes, getSubtypesForType } = useBiometricStore();
 
   const { addSimpleMeasurement, addBloodPressure, isAdding } = useAddMeasurement();
 
   // Form state
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
-  const [selectedSubtypeId, setSelectedSubtypeId] = useState<string>("");
+  const [_selectedSubtypeId, setSelectedSubtypeId] = useState<string>("");
   const [value, setValue] = useState<string>("");
   const [systolic, setSystolic] = useState<string>("");
   const [diastolic, setDiastolic] = useState<string>("");
@@ -34,7 +27,7 @@ export function AddMeasurementDialog() {
   );
 
   const selectedType = measurementTypes.find((t) => t.id.toString() === selectedTypeId);
-  const availableSubtypes = selectedType ? getSubtypesForType(selectedType.id) : [];
+  const _availableSubtypes = selectedType ? getSubtypesForType(selectedType.id) : [];
   const isBloodPressure = selectedType?.name === "blood_pressure";
 
   // Reset form when dialog opens/closes
@@ -53,7 +46,7 @@ export function AddMeasurementDialog() {
   // Reset subtype when type changes
   useEffect(() => {
     setSelectedSubtypeId("");
-  }, [selectedTypeId]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +61,7 @@ export function AddMeasurementDialog() {
         const systolicValue = parseFloat(systolic);
         const diastolicValue = parseFloat(diastolic);
 
-        if (isNaN(systolicValue) || isNaN(diastolicValue)) {
+        if (Number.isNaN(systolicValue) || Number.isNaN(diastolicValue)) {
           return;
         }
 
@@ -81,7 +74,7 @@ export function AddMeasurementDialog() {
       } else {
         // Simple measurement
         const numericValue = parseFloat(value);
-        if (isNaN(numericValue)) return;
+        if (Number.isNaN(numericValue)) return;
 
         await addSimpleMeasurement(selectedType.name, numericValue, measurementDate, notes.trim() || undefined);
       }
@@ -98,11 +91,11 @@ export function AddMeasurementDialog() {
       return (
         systolic.trim() !== "" &&
         diastolic.trim() !== "" &&
-        !isNaN(parseFloat(systolic)) &&
-        !isNaN(parseFloat(diastolic))
+        !Number.isNaN(parseFloat(systolic)) &&
+        !Number.isNaN(parseFloat(diastolic))
       );
     } else {
-      return value.trim() !== "" && !isNaN(parseFloat(value));
+      return value.trim() !== "" && !Number.isNaN(parseFloat(value));
     }
   };
 
@@ -117,7 +110,7 @@ export function AddMeasurementDialog() {
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="4">
             {/* Measurement Type */}
-            <label>
+            <div>
               <Text as="div" size="2" mb="1" weight="bold">
                 Measurement Type
               </Text>
@@ -131,7 +124,7 @@ export function AddMeasurementDialog() {
                   ))}
                 </Select.Content>
               </Select.Root>
-            </label>
+            </div>
 
             {/* Date/Time */}
             <label>
@@ -154,57 +147,54 @@ export function AddMeasurementDialog() {
             </label>
 
             {/* Value Input */}
-            {selectedType && (
-              <>
-                {isBloodPressure ? (
-                  <>
-                    {/* Blood Pressure Inputs */}
-                    <Flex gap="3">
-                      <label style={{ flex: 1 }}>
-                        <Text as="div" size="2" mb="1" weight="bold">
-                          Systolic ({selectedType.unit})
-                        </Text>
-                        <TextField.Root
-                          type="number"
-                          placeholder="120"
-                          value={systolic}
-                          onChange={(e) => setSystolic(e.target.value)}
-                        />
-                      </label>
-                      <label style={{ flex: 1 }}>
-                        <Text as="div" size="2" mb="1" weight="bold">
-                          Diastolic ({selectedType.unit})
-                        </Text>
-                        <TextField.Root
-                          type="number"
-                          placeholder="80"
-                          value={diastolic}
-                          onChange={(e) => setDiastolic(e.target.value)}
-                        />
-                      </label>
-                    </Flex>
-                  </>
-                ) : (
-                  <>
-                    {/* Simple Value Input */}
-                    <label>
+            {selectedType &&
+              (isBloodPressure ? (
+                <>
+                  {/* Blood Pressure Inputs */}
+                  <Flex gap="3">
+                    <div style={{ flex: 1 }}>
                       <Text as="div" size="2" mb="1" weight="bold">
-                        Value ({selectedType.unit})
+                        Systolic ({selectedType.unit})
                       </Text>
                       <TextField.Root
                         type="number"
-                        placeholder={`Enter ${selectedType.displayName.toLowerCase()}`}
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
+                        placeholder="120"
+                        value={systolic}
+                        onChange={(e) => setSystolic(e.target.value)}
                       />
-                    </label>
-                  </>
-                )}
-              </>
-            )}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <Text as="div" size="2" mb="1" weight="bold">
+                        Diastolic ({selectedType.unit})
+                      </Text>
+                      <TextField.Root
+                        type="number"
+                        placeholder="80"
+                        value={diastolic}
+                        onChange={(e) => setDiastolic(e.target.value)}
+                      />
+                    </div>
+                  </Flex>
+                </>
+              ) : (
+                <>
+                  {/* Simple Value Input */}
+                  <div>
+                    <Text as="div" size="2" mb="1" weight="bold">
+                      Value ({selectedType.unit})
+                    </Text>
+                    <TextField.Root
+                      type="number"
+                      placeholder={`Enter ${selectedType.displayName.toLowerCase()}`}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                    />
+                  </div>
+                </>
+              ))}
 
             {/* Notes */}
-            <label>
+            <div>
               <Text as="div" size="2" mb="1" weight="bold">
                 Notes (optional)
               </Text>
@@ -213,7 +203,7 @@ export function AddMeasurementDialog() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
               />
-            </label>
+            </div>
           </Flex>
 
           <Flex gap="3" mt="6" justify="end">

@@ -20,7 +20,7 @@ export class OAuthHandlers {
    * Initiate Google OAuth flow
    * GET /auth/google
    */
-  async initiateGoogleAuth(req: Request): Promise<Response> {
+  async initiateGoogleAuth(_req: Request): Promise<Response> {
     try {
       // Generate a state parameter for CSRF protection
       const state = crypto.randomUUID();
@@ -57,7 +57,7 @@ export class OAuthHandlers {
     try {
       const url = new URL(req.url);
       const code = url.searchParams.get("code");
-      const state = url.searchParams.get("state");
+      const _state = url.searchParams.get("state");
       const error = url.searchParams.get("error");
 
       // Check for OAuth errors
@@ -80,7 +80,7 @@ export class OAuthHandlers {
       const userInfo = await this.oauth.getUserInfo(tokens.access_token);
 
       // Verify ID token
-      const idTokenPayload = await this.oauth.verifyIdToken(tokens.id_token);
+      const _idTokenPayload = await this.oauth.verifyIdToken(tokens.id_token);
 
       // Create or update user in database
       await this.createOrUpdateUser(userInfo);
@@ -182,7 +182,7 @@ export class OAuthHandlers {
       }
 
       // Return user data without sensitive information
-      const { accessToken, refreshToken, ...userData } = sessionData;
+      const { accessToken: _accessToken, refreshToken: _refreshToken, ...userData } = sessionData;
 
       return new Response(
         JSON.stringify({
@@ -281,7 +281,14 @@ export class OAuthHandlers {
   /**
    * Create or update user in database
    */
-  private async createOrUpdateUser(userInfo: any): Promise<void> {
+  private async createOrUpdateUser(userInfo: {
+    id: string;
+    email: string;
+    name: string;
+    given_name: string;
+    family_name: string;
+    picture: string;
+  }): Promise<void> {
     try {
       await userService.findOrCreateUser(userInfo.id, {
         email: userInfo.email,

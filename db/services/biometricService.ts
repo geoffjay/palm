@@ -4,12 +4,7 @@
  */
 
 import { and, desc, eq, gte, lte } from "drizzle-orm";
-import type {
-  BiometricMeasurement,
-  BiometricMeasurementSubtype,
-  BiometricMeasurementType,
-  NewBiometricMeasurement,
-} from "../index";
+import type { BiometricMeasurement, BiometricMeasurementSubtype, BiometricMeasurementType } from "../index";
 import { db, schema } from "../index";
 
 export interface BloodPressureReading {
