@@ -18,27 +18,42 @@ interface DatabaseConfig {
   password: string;
 }
 
-const config: DatabaseConfig = {
-  host: process.env.DB_HOST || "localhost",
-  port: parseInt(process.env.DB_PORT || "5432", 10),
-  database: process.env.DB_NAME || "palm",
-  username: process.env.DB_USER || "user",
-  password: process.env.DB_PASSWORD || "password",
-};
+/**
+ * Determine if we're in production environment
+ */
+const isProduction = process.env.NODE_ENV === "production";
 
 /**
- * Create PostgreSQL connection
+ * Create PostgreSQL connection based on environment
  */
-const queryClient = postgres({
-  host: config.host,
-  port: config.port,
-  database: config.database,
-  username: config.username,
-  password: config.password,
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-});
+const queryClient =
+  isProduction && process.env.DATABASE_URL
+    ? postgres(process.env.DATABASE_URL, {
+        max: 10,
+        idle_timeout: 20,
+        connect_timeout: 10,
+        prepare: false,
+      })
+    : (() => {
+        const config: DatabaseConfig = {
+          host: process.env.DB_HOST || "localhost",
+          port: parseInt(process.env.DB_PORT || "5432", 10),
+          database: process.env.DB_NAME || "palm",
+          username: process.env.DB_USER || "user",
+          password: process.env.DB_PASSWORD || "password",
+        };
+
+        return postgres({
+          host: config.host,
+          port: config.port,
+          database: config.database,
+          username: config.username,
+          password: config.password,
+          max: 10,
+          idle_timeout: 20,
+          connect_timeout: 10,
+        });
+      })();
 
 /**
  * Drizzle database instance with schema
