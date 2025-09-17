@@ -16,17 +16,17 @@ const mockBiometricService = {
     }
     return [];
   }),
-  getUserMeasurementSummary: mock(async () => [{ type: { name: "heart_rate" }, count: 5 }]),
+  getUserMeasurementSummary: mock(async (...args: any[]) => [{ type: { name: "heart_rate" }, count: 5 }]),
   getMeasurementHistory: mock(async () => [testUtils.createMockMeasurement()]),
-  recordSimpleMeasurement: mock(async () => testUtils.createMockMeasurement()),
-  recordBloodPressure: mock(async () => [testUtils.createMockMeasurement()]),
+  recordSimpleMeasurement: mock(async (...args: any[]) => testUtils.createMockMeasurement()),
+  recordBloodPressure: mock(async (...args: any[]) => [testUtils.createMockMeasurement()]),
   getMeasurementById: mock(async () => testUtils.createMockMeasurement()),
 };
 
 const mockUserService = {
   findByGoogleId: mock(async (googleId: string) => {
     if (googleId === "test_google_id") {
-      return { id: 1, ...testUtils.createMockUser() };
+      return { ...testUtils.createMockUser(), id: 1 };
     }
     return null;
   }),
@@ -58,7 +58,7 @@ describe("API Endpoints", () => {
     // Reset the mocks to their default state
     mockUserService.findByGoogleId = mock(async (googleId: string) => {
       if (googleId === "test_google_id") {
-        return { id: 1, ...testUtils.createMockUser() };
+        return { ...testUtils.createMockUser(), id: 1 };
       }
       return null;
     });
@@ -141,7 +141,7 @@ describe("API Endpoints", () => {
 
   describe("GET /api/biometrics/measurements", () => {
     test("should return user measurements", async () => {
-      const handler = mockAuthMiddleware.requireAuth(async (req: { url: string }) => {
+      const handler = mockAuthMiddleware.requireAuth(async (req: { url: string; user?: any }) => {
         const dbUser = await mockUserService.findByGoogleId(req.user.userId);
         if (!dbUser) {
           return Response.json({ error: "User not found" }, { status: 404 });

@@ -23,7 +23,7 @@ mock.module("ioredis", () => ({
 }));
 
 describe("SessionManager", () => {
-  let SessionManager: { new (): any };
+  let SessionManager: new () => unknown;
 
   beforeEach(async () => {
     // Reset ALL mock functions to ensure clean state
@@ -65,14 +65,14 @@ describe("SessionManager", () => {
   test("getSession - should return null for non-existent session", async () => {
     mockRedis.get = mock(async () => null);
 
-    const sessionManager = new SessionManager();
+    const sessionManager = new SessionManager() as any;
     const session = await sessionManager.getSession("non_existent_session");
 
     expect(session).toBeNull();
   });
 
   test("updateSession - should update existing session", async () => {
-    const sessionManager = new SessionManager();
+    const sessionManager = new SessionManager() as any;
     const updates = { lastActivity: Date.now() + 1000 };
 
     const result = await sessionManager.updateSession("test_session_id", updates);
@@ -93,7 +93,7 @@ describe("SessionManager", () => {
     };
     mockRedis.get = mock(async () => JSON.stringify(expiredSessionData));
 
-    const sessionManager = new SessionManager();
+    const sessionManager = new SessionManager() as any;
     const isValid = await sessionManager.validateSession("expired_session");
 
     expect(isValid).toBe(false);
@@ -108,7 +108,7 @@ describe("SessionManager", () => {
       headers: {
         get: () => null,
       },
-    } as Request;
+    } as unknown as Request;
 
     const sessionId = sessionManager.extractSessionId(mockRequest);
 
