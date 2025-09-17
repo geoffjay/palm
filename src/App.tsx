@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { BiometricsPage } from "./components/BiometricsPage";
 import { Dashboard } from "./components/Dashboard";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ProfilePage } from "./components/ProfilePage";
@@ -23,6 +24,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/biometrics" element={<BiometricsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

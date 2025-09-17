@@ -110,6 +110,121 @@ const server = serve({
       }),
     },
 
+    // Biometric API endpoints
+    "/api/biometrics/types": {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+        const { biometricService } = await import("../db/services");
+        try {
+          const types = await biometricService.getAllMeasurementTypes();
+          return Response.json({ types });
+        } catch (error) {
+          console.error("Error fetching measurement types:", error);
+          return Response.json({ error: "Failed to fetch measurement types" }, { status: 500 });
+        }
+      }),
+    },
+
+    "/api/biometrics/subtypes/:typeId": {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+        const { biometricService } = await import("../db/services");
+        try {
+          const typeId = parseInt(req.params.typeId);
+          const subtypes = await biometricService.getSubtypesForType(typeId);
+          return Response.json({ subtypes });
+        } catch (error) {
+          console.error("Error fetching measurement subtypes:", error);
+          return Response.json({ error: "Failed to fetch measurement subtypes" }, { status: 500 });
+        }
+      }),
+    },
+
+    "/api/biometrics/measurements": {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+        const { biometricService, userService } = await import("../db/services");
+        try {
+          // Get database user ID from Google ID
+          const dbUser = await userService.findByGoogleId(req.user.userId);
+          if (!dbUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+          }
+
+          const summary = await biometricService.getUserMeasurementSummary(dbUser.id);
+          const allMeasurements = [];
+
+          // Load detailed history for each type that has measurements
+          for (const item of summary) {
+            if (item.count > 0) {
+              const history = await biometricService.getMeasurementHistory(
+                dbUser.id,
+                item.type.name,
+                undefined, // start date
+                undefined, // end date
+                50, // limit to recent 50 measurements per type
+              );
+              allMeasurements.push(...history);
+            }
+          }
+
+          // Sort by measured date, newest first
+          allMeasurements.sort((a, b) => new Date(b.measuredAt).getTime() - new Date(a.measuredAt).getTime());
+
+          return Response.json({ measurements: allMeasurements });
+        } catch (error) {
+          console.error("Error fetching measurements:", error);
+          return Response.json({ error: "Failed to fetch measurements" }, { status: 500 });
+        }
+      }),
+      POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest & { user: any }) => {
+        const { biometricService, userService } = await import("../db/services");
+        try {
+          const body = await req.json();
+          const { typeName, value, systolic, diastolic, measuredAt, notes } = body;
+
+          // Get database user ID from Google ID
+          const dbUser = await userService.findByGoogleId(req.user.userId);
+          if (!dbUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+          }
+
+          const measurementDate = measuredAt ? new Date(measuredAt) : new Date();
+
+          if (typeName === "blood_pressure" && systolic && diastolic) {
+            // Blood pressure measurement
+            const measurements = await biometricService.recordBloodPressure(dbUser.id, {
+              systolic: parseFloat(systolic),
+              diastolic: parseFloat(diastolic),
+              measuredAt: measurementDate,
+              notes: notes || undefined,
+            });
+
+            // Get the full measurement details with type information
+            const fullMeasurements = await Promise.all(
+              measurements.map((m) => biometricService.getMeasurementById(m.id)),
+            );
+            return Response.json({ measurements: fullMeasurements.filter((m) => m !== null) });
+          } else if (value) {
+            // Simple measurement
+            const measurement = await biometricService.recordSimpleMeasurement(
+              dbUser.id,
+              typeName,
+              parseFloat(value),
+              measurementDate,
+              notes || undefined,
+            );
+
+            // Get the full measurement details with type information
+            const fullMeasurement = await biometricService.getMeasurementById(measurement.id);
+            return Response.json({ measurement: fullMeasurement });
+          } else {
+            return Response.json({ error: "Invalid measurement data" }, { status: 400 });
+          }
+        } catch (error) {
+          console.error("Error adding measurement:", error);
+          return Response.json({ error: error.message || "Failed to add measurement" }, { status: 500 });
+        }
+      }),
+    },
+
     // Serve index.html for all unmatched routes (SPA routing) - must be last
     "/*": index,
   },

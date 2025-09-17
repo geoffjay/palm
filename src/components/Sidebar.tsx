@@ -99,7 +99,7 @@ export function Sidebar({ isOpen, isMobile, onClose }: SidebarProps) {
                   <Text size="1" weight="medium" color="gray">
                     HEALTH & WELLNESS
                   </Text>
-                  <Link to="/health" onClick={handleLinkClick}>
+                  <Link to="/biometrics" onClick={handleLinkClick}>
                     <Button variant="ghost" size="2">
                       <HeartIcon width="16" height="16" />
                       Biometrics

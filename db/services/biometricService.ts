@@ -220,7 +220,11 @@ export class BiometricService {
     }
 
     const measurements = await db
-      .select()
+      .select({
+        biometric_measurements: schema.biometricMeasurements,
+        biometric_measurement_types: schema.biometricMeasurementTypes,
+        biometric_measurement_subtypes: schema.biometricMeasurementSubtypes,
+      })
       .from(schema.biometricMeasurements)
       .innerJoin(
         schema.biometricMeasurementTypes,
@@ -239,6 +243,37 @@ export class BiometricService {
       measurementType: m.biometric_measurement_types,
       measurementSubtype: m.biometric_measurement_subtypes || undefined,
     }));
+  }
+
+  /**
+   * Get measurement by ID with full details
+   */
+  async getMeasurementById(id: number): Promise<MeasurementWithDetails | null> {
+    const [measurement] = await db
+      .select({
+        biometric_measurements: schema.biometricMeasurements,
+        biometric_measurement_types: schema.biometricMeasurementTypes,
+        biometric_measurement_subtypes: schema.biometricMeasurementSubtypes,
+      })
+      .from(schema.biometricMeasurements)
+      .innerJoin(
+        schema.biometricMeasurementTypes,
+        eq(schema.biometricMeasurements.measurementTypeId, schema.biometricMeasurementTypes.id),
+      )
+      .leftJoin(
+        schema.biometricMeasurementSubtypes,
+        eq(schema.biometricMeasurements.measurementSubtypeId, schema.biometricMeasurementSubtypes.id),
+      )
+      .where(eq(schema.biometricMeasurements.id, id))
+      .limit(1);
+
+    if (!measurement) return null;
+
+    return {
+      ...measurement.biometric_measurements,
+      measurementType: measurement.biometric_measurement_types,
+      measurementSubtype: measurement.biometric_measurement_subtypes || undefined,
+    };
   }
 
   /**
@@ -275,6 +310,17 @@ export class BiometricService {
       .limit(1);
 
     return subtype || null;
+  }
+
+  /**
+   * Get subtypes for a measurement type
+   */
+  async getSubtypesForType(typeId: number): Promise<BiometricMeasurementSubtype[]> {
+    return await db
+      .select()
+      .from(schema.biometricMeasurementSubtypes)
+      .where(eq(schema.biometricMeasurementSubtypes.measurementTypeId, typeId))
+      .orderBy(schema.biometricMeasurementSubtypes.sortOrder);
   }
 
   /**

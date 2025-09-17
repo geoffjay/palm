@@ -2,6 +2,7 @@
  * OAuth route handlers for Google authentication
  */
 
+import { userService } from "../../db/services";
 import type { AuthenticatedRequest } from "./middleware";
 import { GoogleOAuth } from "./oauth";
 import { SessionManager } from "./session";
@@ -80,6 +81,9 @@ export class OAuthHandlers {
 
       // Verify ID token
       const idTokenPayload = await this.oauth.verifyIdToken(tokens.id_token);
+
+      // Create or update user in database
+      await this.createOrUpdateUser(userInfo);
 
       // Create user session
       const sessionId = await this.sessionManager.createSession({
@@ -271,6 +275,24 @@ export class OAuthHandlers {
           headers: { "Content-Type": "application/json" },
         },
       );
+    }
+  }
+
+  /**
+   * Create or update user in database
+   */
+  private async createOrUpdateUser(userInfo: any): Promise<void> {
+    try {
+      await userService.findOrCreateUser(userInfo.id, {
+        email: userInfo.email,
+        name: userInfo.name,
+        givenName: userInfo.given_name,
+        familyName: userInfo.family_name,
+        picture: userInfo.picture,
+      });
+    } catch (error) {
+      console.error("Failed to create/update user in database:", error);
+      // Don't throw error to avoid breaking OAuth flow
     }
   }
 
