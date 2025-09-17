@@ -68,6 +68,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/styled-components": "^5.1.34",
-    "jsdom": "^25.0.1"
+    "jsdom": "^27.0.0"
   }
 }
