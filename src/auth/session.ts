@@ -37,6 +37,7 @@ export class SessionManager {
       this.redis = new Redis(process.env.REDIS_URL, {
         retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
+        lazyConnect: true,
       });
     } else {
       this.redis = new Redis({
@@ -46,8 +47,30 @@ export class SessionManager {
         db: parseInt(process.env.REDIS_DB || "0", 10),
         retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
+        lazyConnect: true,
       });
     }
+
+    // Add error handling for Redis connection
+    this.redis.on("error", (error) => {
+      console.error("Redis connection error:", error);
+    });
+
+    this.redis.on("connect", () => {
+      console.log("Redis connected successfully");
+    });
+
+    this.redis.on("ready", () => {
+      console.log("Redis connection ready");
+    });
+
+    this.redis.on("close", () => {
+      console.log("Redis connection closed");
+    });
+
+    this.redis.on("reconnecting", () => {
+      console.log("Redis reconnecting...");
+    });
 
     this.config = {
       ttl: parseInt(process.env.SESSION_TTL || "86400", 10), // 24 hours default
