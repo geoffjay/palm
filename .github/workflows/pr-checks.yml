@@ -1,0 +1,195 @@
+name: 🔍 Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  quick-checks:
+    name: ⚡ Quick Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Lint check
+        run: bun run lint
+
+      - name: ✨ Format check
+        run: bun run check
+
+      - name: 📏 Check file sizes
+        run: |
+          echo "Checking for large files..."
+          find . -type f -size +10M -not -path "./node_modules/*" -not -path "./.git/*" | while read file; do
+            echo "⚠️  Large file detected: $file ($(du -h "$file" | cut -f1))"
+          done || true
+
+      - name: 🔒 Security audit
+        run: bun audit
+        continue-on-error: true
+
+  pr-info:
+    name: 📋 PR Information
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📊 PR Stats
+        run: |
+          echo "## 📋 Pull Request Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.head_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Base:** ${{ github.base_ref }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Author:** @${{ github.event.pull_request.user.login }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # File changes
+          echo "### 📁 Changed Files" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only origin/${{ github.base_ref }}..HEAD | head -20 | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done
+
+          # Check if there are more than 20 files
+          TOTAL_FILES=$(git diff --name-only origin/${{ github.base_ref }}..HEAD | wc -l)
+          if [ $TOTAL_FILES -gt 20 ]; then
+            echo "- ... and $(($TOTAL_FILES - 20)) more files" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total files changed:** $TOTAL_FILES" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lines added:** $(git diff --shortstat origin/${{ github.base_ref }}..HEAD | grep -o '[0-9]* insertion' | grep -o '[0-9]*' || echo '0')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Lines removed:** $(git diff --shortstat origin/${{ github.base_ref }}..HEAD | grep -o '[0-9]* deletion' | grep -o '[0-9]*' || echo '0')" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 📦 Dependency Analysis
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Dependencies" >> $GITHUB_STEP_SUMMARY
+
+          # Check if package.json changed
+          if git diff --name-only origin/${{ github.base_ref }}..HEAD | grep -q "package.json"; then
+            echo "⚠️ **package.json was modified**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please ensure:" >> $GITHUB_STEP_SUMMARY
+            echo "- New dependencies are necessary" >> $GITHUB_STEP_SUMMARY
+            echo "- Version updates are tested" >> $GITHUB_STEP_SUMMARY
+            echo "- Lock file is updated (bun.lockb)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No dependency changes detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  type-check:
+    name: 📝 Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 📝 TypeScript check
+        run: |
+          # Check if TypeScript files exist
+          if find . -name "*.ts" -o -name "*.tsx" | grep -v node_modules | head -1 > /dev/null; then
+            echo "Running TypeScript checks..."
+            bunx tsc --noEmit
+            echo "✅ TypeScript check passed"
+          else
+            echo "No TypeScript files found, skipping type check"
+          fi
+
+  build-check:
+    name: 🏗️ Build Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Test build
+        run: |
+          echo "Testing build process..."
+          bun run build
+
+          echo "Build completed successfully!"
+          echo "Build artifacts:"
+          ls -la dist/
+
+          # Check bundle sizes
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📦 Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Asset | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|------|" >> $GITHUB_STEP_SUMMARY
+
+          cd dist
+          for file in *; do
+            if [ -f "$file" ]; then
+              size=$(du -h "$file" | cut -f1)
+              echo "| \`$file\` | $size |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+  draft-pr-reminder:
+    name: 📝 Draft PR Reminder
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == true
+
+    steps:
+      - name: 📝 Draft reminder
+        run: |
+          echo "## 📝 Draft Pull Request" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This PR is currently in draft mode." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**When ready for review:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Mark as ready for review" >> $GITHUB_STEP_SUMMARY
+          echo "2. Full test suite will run automatically" >> $GITHUB_STEP_SUMMARY
+          echo "3. Request reviewers as needed" >> $GITHUB_STEP_SUMMARY

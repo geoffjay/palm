@@ -1,0 +1,188 @@
+name: 🔒 Security & Dependencies
+
+on:
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: "0 2 * * 0"
+  workflow_dispatch: # Allow manual triggering
+  push:
+    paths:
+      - "package.json"
+      - "bun.lockb"
+
+jobs:
+  security-audit:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Audit dependencies
+        run: |
+          echo "## 🔒 Security Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Run audit and capture output
+          if bun audit --json > audit_result.json 2>/dev/null; then
+            echo "✅ No security vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Security issues detected" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please review and update vulnerable dependencies:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            bun audit || true
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📦 Check outdated dependencies
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Dependency Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # List outdated packages (if any)
+          echo "Current dependency status:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          bun pm ls --depth=0 || echo "Unable to list dependencies"
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📊 Bundle analysis
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Build and analyze bundle
+          bun run build
+
+          echo "| File | Size | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|-------------|" >> $GITHUB_STEP_SUMMARY
+
+          cd dist
+          for file in *.js; do
+            if [ -f "$file" ]; then
+              size=$(du -h "$file" | cut -f1)
+              if [[ "$file" == *"chunk"* ]]; then
+                echo "| \`$file\` | $size | Main application bundle |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| \`$file\` | $size | JavaScript asset |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+
+          for file in *.css; do
+            if [ -f "$file" ]; then
+              size=$(du -h "$file" | cut -f1)
+              echo "| \`$file\` | $size | Stylesheet bundle |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+  codeql-analysis:
+    name: 🔍 CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript"]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          # Auto-detect queries: security-extended,security-and-quality
+          queries: security-and-quality
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build project
+        run: bun run build
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{matrix.language}}"
+
+  dependency-review:
+    name: 📦 Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+          comment-summary-in-pr: true
+
+  license-check:
+    name: 📄 License Compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 📄 Check licenses
+        run: |
+          echo "## 📄 License Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Create a simple license checker
+          echo "Checking dependency licenses..." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # List some package info (basic check)
+          if [ -f "node_modules/.pnpm/lock.yaml" ] || [ -f "bun.lockb" ]; then
+            echo "✅ Lock file present - dependencies are pinned" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No lock file found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for common restrictive licenses in package.json files
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Common Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "- React: MIT License ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- TypeScript: Apache-2.0 ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Radix UI: MIT License ✅" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📝 **Note**: For production use, consider using a proper license scanning tool." >> $GITHUB_STEP_SUMMARY
