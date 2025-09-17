@@ -9,7 +9,7 @@ primary_region = 'sea'
 [build]
 
 [deploy]
-release_command = "bun run db:migrate"
+release_command = "bash -c 'NODE_ENV=production bun run db:migrate'"
 
 [http_service]
 internal_port = 3000
