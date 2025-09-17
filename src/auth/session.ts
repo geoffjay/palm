@@ -32,14 +32,22 @@ export class SessionManager {
 
   constructor() {
     // Initialize Redis connection using ioredis
-    this.redis = new Redis({
-      host: process.env.REDIS_HOST || "localhost",
-      port: parseInt(process.env.REDIS_PORT || "6379", 10),
-      password: process.env.REDIS_PASSWORD,
-      db: parseInt(process.env.REDIS_DB || "0", 10),
-      retryDelayOnFailover: 100,
-      maxRetriesPerRequest: 3,
-    });
+    // Support both REDIS_URL (production) and individual environment variables (development)
+    if (process.env.REDIS_URL) {
+      this.redis = new Redis(process.env.REDIS_URL, {
+        retryDelayOnFailover: 100,
+        maxRetriesPerRequest: 3,
+      });
+    } else {
+      this.redis = new Redis({
+        host: process.env.REDIS_HOST || "localhost",
+        port: parseInt(process.env.REDIS_PORT || "6379", 10),
+        password: process.env.REDIS_PASSWORD,
+        db: parseInt(process.env.REDIS_DB || "0", 10),
+        retryDelayOnFailover: 100,
+        maxRetriesPerRequest: 3,
+      });
+    }
 
     this.config = {
       ttl: parseInt(process.env.SESSION_TTL || "86400", 10), // 24 hours default
