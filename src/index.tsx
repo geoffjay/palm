@@ -301,6 +301,15 @@ const server = serve({
           const state = url.searchParams.get("state"); // userId
           const error = url.searchParams.get("error");
 
+          console.log("🔄 Integration callback received:", {
+            providerId,
+            hasCode: !!code,
+            codePrefix: code?.substring(0, 20) + "...",
+            state,
+            hasError: !!error,
+            fullUrl: req.url,
+          });
+
           if (error) {
             console.error("Integration OAuth error:", error);
             return new Response(null, {

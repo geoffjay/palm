@@ -186,6 +186,8 @@ export class GoogleFitIntegration implements DataSourceIntegration {
    * Exchange authorization code for access tokens
    */
   private async exchangeCodeForTokens(code: string): Promise<GoogleFitTokenResponse> {
+    console.log("🔄 Attempting token exchange with code:", code.substring(0, 20) + "...");
+
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
