@@ -3,9 +3,9 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import { db } from "../db";
-import type { DataSourceConnection, NewDataSourceConnection } from "../db/schema";
-import { dataSourceConnections, users } from "../db/schema";
+import { db } from "../../db";
+import type { DataSourceConnection, NewDataSourceConnection } from "../../db/schema";
+import { dataSourceConnections, users } from "../../db/schema";
 import { GoogleFitIntegration } from "./googleFit";
 import type { BiometricDataPoint, DataSourceIntegration } from "./types";
 
@@ -182,7 +182,7 @@ export class IntegrationService {
    * Convert external data points to biometric measurements
    */
   async saveBiometricData(userId: number, dataPoints: BiometricDataPoint[]): Promise<void> {
-    const { biometricService } = await import("../db/services");
+    const { biometricService } = await import("../../db/services");
 
     for (const point of dataPoints) {
       try {
