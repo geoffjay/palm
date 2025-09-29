@@ -16,6 +16,7 @@ export function useAuth() {
 
   const checkAuth = useCallback(async () => {
     try {
+      console.log("🔐 Checking authentication...");
       setAuthState((prev) => ({ ...prev, loading: true }));
 
       const response = await fetch("/auth/user", {
@@ -23,8 +24,11 @@ export function useAuth() {
         credentials: "include",
       });
 
+      console.log("🔐 Auth response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log("🔐 Auth data:", data);
 
         setAuthState({
           user: data.user,
@@ -32,6 +36,7 @@ export function useAuth() {
           authenticated: !!data.user,
         });
       } else {
+        console.log("🔐 Auth failed, not authenticated");
         setAuthState({
           user: null,
           loading: false,
@@ -39,7 +44,7 @@ export function useAuth() {
         });
       }
     } catch (error) {
-      console.error("Auth check failed:", error);
+      console.error("🔐 Auth check failed:", error);
       setAuthState({
         user: null,
         loading: false,

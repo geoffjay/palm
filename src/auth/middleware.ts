@@ -18,7 +18,7 @@ export class AuthMiddleware {
   private sessionManager: SessionManager;
 
   constructor() {
-    this.sessionManager = new SessionManager();
+    this.sessionManager = SessionManager.getInstance();
   }
 
   /**

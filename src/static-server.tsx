@@ -38,7 +38,7 @@ const server = serve({
     },
 
     "/auth/user": {
-      GET: (req: AuthenticatedRequest) => oauthHandlers.getCurrentUser(req),
+      GET: authMiddleware.optionalAuth(async (req: AuthenticatedRequest) => oauthHandlers.getCurrentUser(req)),
     },
 
     "/auth/refresh": {
@@ -74,10 +74,10 @@ const server = serve({
         return Response.json({
           message: "User profile data",
           user: {
-            id: req.user.userId,
-            email: req.user.email,
-            name: req.user.name,
-            picture: req.user.picture,
+            id: req.user?.userId || "",
+            email: req.user?.email || "",
+            name: req.user?.name || "",
+            picture: req.user?.picture || "",
           },
         });
       }),
@@ -87,7 +87,7 @@ const server = serve({
       GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         return Response.json({
           message: "User settings",
-          userId: req.user.userId,
+          userId: req.user?.userId || "",
         });
       }),
 
@@ -99,7 +99,7 @@ const server = serve({
 
         return Response.json({
           message: "Settings updated",
-          userId: req.user.userId,
+          userId: req.user?.userId || "",
           updates: body,
         });
       }),
@@ -157,7 +157,7 @@ const server = serve({
         const { biometricService, userService } = await import("../db/services");
         try {
           // Get database user ID from Google ID
-          const dbUser = await userService.findByGoogleId(req.user.userId);
+          const dbUser = await userService.findByGoogleId(req.user?.userId || "");
           if (!dbUser) {
             return Response.json({ error: "User not found" }, { status: 404 });
           }
@@ -195,7 +195,7 @@ const server = serve({
           const { typeName, value, systolic, diastolic, measuredAt, notes } = body;
 
           // Get database user ID from Google ID
-          const dbUser = await userService.findByGoogleId(req.user.userId);
+          const dbUser = await userService.findByGoogleId(req.user?.userId || "");
           if (!dbUser) {
             return Response.json({ error: "User not found" }, { status: 404 });
           }
@@ -242,35 +242,49 @@ const server = serve({
       }),
     },
 
-    // Serve static assets
-    "/chunk-*": async (req: Request) => {
+    // Serve all static assets with proper MIME types
+    "/*": async (req: Request) => {
       const url = new URL(req.url);
-      const fileName = url.pathname.split("/").pop();
-      const filePath = path.join(STATIC_DIR, fileName || "");
+      const pathname = url.pathname;
+
+      console.log(`📄 Request: ${req.method} ${pathname}`);
+
+      // Skip API and auth routes
+      if (pathname.startsWith("/api/") || pathname.startsWith("/auth/")) {
+        return new Response("Not Found", { status: 404 });
+      }
+
+      // Handle root path and extract filename
+      let fileName = pathname.split("/").pop() || "";
+
+      // If it's the root path or empty filename, serve index.html
+      if (pathname === "/" || fileName === "") {
+        fileName = "index.html";
+      }
+
+      const filePath = path.join(STATIC_DIR, fileName);
+      console.log(`📄 Looking for file: ${filePath}`);
 
       if (existsSync(filePath)) {
-        return new Response(Bun.file(filePath));
+        const headers: Record<string, string> = {};
+
+        // Set appropriate MIME type based on file extension
+        if (fileName.endsWith(".js")) {
+          headers["Content-Type"] = "application/javascript";
+        } else if (fileName.endsWith(".css")) {
+          headers["Content-Type"] = "text/css";
+        } else if (fileName.endsWith(".svg")) {
+          headers["Content-Type"] = "image/svg+xml";
+        } else if (fileName.endsWith(".html")) {
+          headers["Content-Type"] = "text/html";
+        }
+
+        return new Response(Bun.file(filePath), { headers });
       }
-      return new Response("Not Found", { status: 404 });
-    },
 
-    "/logo-*": async (req: Request) => {
-      const url = new URL(req.url);
-      const fileName = url.pathname.split("/").pop();
-      const filePath = path.join(STATIC_DIR, fileName || "");
-
-      if (existsSync(filePath)) {
-        return new Response(Bun.file(filePath));
-      }
-      return new Response("Not Found", { status: 404 });
-    },
-
-    // Serve index.html for all unmatched routes (SPA routing) - must be last
-    "/*": async () => {
+      // If no static file found, serve index.html for SPA routing
       return new Response(Bun.file(INDEX_HTML), {
-        headers: {
-          "Content-Type": "text/html",
-        },
+        headers: { "Content-Type": "text/html" },
       });
     },
   },

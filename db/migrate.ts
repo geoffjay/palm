@@ -12,6 +12,23 @@ import { seedMeasurementTypes } from "./seed";
 async function runMigrations() {
   console.log("🚀 Running database migrations...");
 
+  // Debug: Log connection info (without sensitive data)
+  const isProduction = process.env.NODE_ENV === "production";
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`Using DATABASE_URL: ${!!process.env.DATABASE_URL}`);
+  console.log(`Using individual DB vars: ${!!process.env.DB_HOST}`);
+  console.log(`Production mode: ${isProduction}`);
+
+  if (process.env.DATABASE_URL) {
+    try {
+      const dbUrl = new URL(process.env.DATABASE_URL);
+      console.log(`Database host: ${dbUrl.hostname}`);
+      console.log(`Database port: ${dbUrl.port || "5432"}`);
+    } catch (e) {
+      console.log(`Database URL parse error: ${e}`);
+    }
+  }
+
   try {
     await migrate(db, {
       migrationsFolder: "./db/drizzle",

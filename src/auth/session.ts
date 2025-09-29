@@ -4,7 +4,7 @@
 
 import Redis from "ioredis";
 
-interface SessionData {
+export interface SessionData {
   userId: string;
   email: string;
   name: string;
@@ -27,22 +27,49 @@ interface SessionConfig {
 }
 
 export class SessionManager {
+  private static instance: SessionManager;
   private redis: Redis;
   private config: SessionConfig;
+  private inMemorySessions: Map<string, SessionData> = new Map();
 
-  constructor() {
+  private constructor() {
     // Initialize Redis connection using ioredis
     // Support both REDIS_URL (production) and individual environment variables (development)
+    console.log("🔧 Redis config - REDIS_URL exists:", !!process.env.REDIS_URL);
+    console.log("🔧 Redis config - Using URL:", process.env.REDIS_URL ? "YES" : "NO");
+
     if (process.env.REDIS_URL) {
-      this.redis = new Redis(process.env.REDIS_URL);
+      console.log("🔧 Creating Redis connection with URL");
+      this.redis = new Redis(process.env.REDIS_URL, {
+        connectTimeout: 10000,
+        lazyConnect: true,
+        maxRetriesPerRequest: 1,
+      });
     } else {
+      console.log("🔧 Creating Redis connection with individual vars");
       this.redis = new Redis({
         host: process.env.REDIS_HOST || "localhost",
         port: parseInt(process.env.REDIS_PORT || "6379", 10),
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_DB || "0", 10),
+        connectTimeout: 10000,
+        lazyConnect: true,
       });
     }
+
+    // Add error handling for Redis connection
+    this.redis.on("error", (error) => {
+      console.error("Redis connection error:", error);
+      console.warn("⚠️  Sessions will not persist across server restarts");
+    });
+
+    this.redis.on("connect", () => {
+      console.log("Redis connected successfully");
+    });
+
+    this.redis.on("ready", () => {
+      console.log("Redis connection ready");
+    });
 
     this.config = {
       ttl: parseInt(process.env.SESSION_TTL || "86400", 10), // 24 hours default
@@ -54,6 +81,13 @@ export class SessionManager {
         path: "/",
       },
     };
+  }
+
+  public static getInstance(): SessionManager {
+    if (!SessionManager.instance) {
+      SessionManager.instance = new SessionManager();
+    }
+    return SessionManager.instance;
   }
 
   /**
@@ -79,7 +113,15 @@ export class SessionManager {
     };
 
     const key = `session:${sessionId}`;
-    await this.redis.setex(key, this.config.ttl, JSON.stringify(sessionData));
+
+    try {
+      await this.redis.setex(key, this.config.ttl, JSON.stringify(sessionData));
+      console.log("✅ Session saved to Redis successfully");
+    } catch (error) {
+      console.error("❌ Failed to save session to Redis:", error);
+      console.warn("⚠️  Saving session in memory as fallback");
+      this.inMemorySessions.set(sessionId, sessionData);
+    }
 
     return sessionId;
   }
@@ -91,11 +133,21 @@ export class SessionManager {
     if (!sessionId) return null;
 
     const key = `session:${sessionId}`;
-    const data = await this.redis.get(key);
-
-    if (!data) return null;
 
     try {
+      const data = await this.redis.get(key);
+
+      if (!data) {
+        // Fallback to in-memory sessions
+        const memorySession = this.inMemorySessions.get(sessionId);
+        if (memorySession) {
+          console.log("✅ Session found in memory fallback");
+          memorySession.lastActivity = Date.now();
+          return memorySession;
+        }
+        return null;
+      }
+
       const sessionData = JSON.parse(data) as SessionData;
 
       // Update last activity
@@ -104,7 +156,18 @@ export class SessionManager {
 
       return sessionData;
     } catch (error) {
-      console.error("Failed to parse session data:", error);
+      console.error("❌ Failed to get session from Redis:", error);
+      console.warn("⚠️  Checking memory fallback");
+
+      // Fallback to in-memory sessions
+      const memorySession = this.inMemorySessions.get(sessionId);
+      if (memorySession) {
+        console.log("✅ Session found in memory fallback");
+        memorySession.lastActivity = Date.now();
+        return memorySession;
+      }
+
+      console.warn("⚠️  Session not found in memory either");
       return null;
     }
   }

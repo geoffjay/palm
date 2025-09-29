@@ -13,7 +13,7 @@ export class OAuthHandlers {
 
   constructor() {
     this.oauth = new GoogleOAuth();
-    this.sessionManager = new SessionManager();
+    this.sessionManager = SessionManager.getInstance();
   }
 
   /**
@@ -55,36 +55,49 @@ export class OAuthHandlers {
    */
   async handleGoogleCallback(req: Request): Promise<Response> {
     try {
+      console.log("🔐 OAuth callback started");
       const url = new URL(req.url);
       const code = url.searchParams.get("code");
       const _state = url.searchParams.get("state");
       const error = url.searchParams.get("error");
 
+      console.log("🔐 OAuth params - code:", !!code, "error:", error);
+
       // Check for OAuth errors
       if (error) {
-        console.error("OAuth error:", error);
+        console.error("🔐 OAuth error:", error);
         return this.redirectWithError("OAuth authentication was cancelled or failed");
       }
 
       if (!code) {
+        console.error("🔐 No authorization code received");
         return this.redirectWithError("No authorization code received");
       }
 
       // TODO: Validate state parameter for CSRF protection
       // In production, compare with stored state
 
+      console.log("🔐 Exchanging code for tokens...");
       // Exchange code for tokens
       const tokens = await this.oauth.exchangeCodeForTokens(code);
+      console.log("🔐 Tokens received:", !!tokens.access_token);
 
+      console.log("🔐 Getting user info...");
       // Get user information
       const userInfo = await this.oauth.getUserInfo(tokens.access_token);
+      console.log("🔐 User info received:", userInfo.email);
 
+      console.log("🔐 Verifying ID token...");
       // Verify ID token
       const _idTokenPayload = await this.oauth.verifyIdToken(tokens.id_token);
+      console.log("🔐 ID token verified");
 
+      console.log("🔐 Creating/updating user...");
       // Create or update user in database
       await this.createOrUpdateUser(userInfo);
+      console.log("🔐 User created/updated");
 
+      console.log("🔐 Creating session...");
       // Create user session
       const sessionId = await this.sessionManager.createSession({
         userId: userInfo.id,
@@ -94,6 +107,7 @@ export class OAuthHandlers {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
       });
+      console.log("🔐 Session created:", !!sessionId);
 
       // Create session cookie
       const sessionCookie = this.sessionManager.createSessionCookie(sessionId);
@@ -109,7 +123,11 @@ export class OAuthHandlers {
         },
       });
     } catch (error) {
-      console.error("OAuth callback error:", error);
+      console.error("🔐 OAuth callback error:", error);
+      console.error("🔐 Error details:", {
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       return this.redirectWithError("Authentication failed");
     }
   }
