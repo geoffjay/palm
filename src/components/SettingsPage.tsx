@@ -1,4 +1,6 @@
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { Button, Card, Flex, Heading, Switch, Text } from "@radix-ui/themes";
+import { Link } from "react-router";
 import { useUser } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { ProtectedLayout } from "./ProtectedLayout";
@@ -60,6 +62,28 @@ export function SettingsPage() {
                 </Text>
               </Flex>
               <Switch />
+            </Flex>
+          </Flex>
+        </Card>
+
+        {/* Data Sources */}
+        <Card variant="surface">
+          <Flex direction="column" p="6" gap="4">
+            <Heading size="4">Data Sources</Heading>
+
+            <Flex justify="between" align="center">
+              <Flex direction="column" gap="1">
+                <Text weight="medium">External Integrations</Text>
+                <Text size="2" color="gray">
+                  Connect fitness and health apps to import your data
+                </Text>
+              </Flex>
+              <Link to="/integrations">
+                <Button variant="outline">
+                  <ArrowRightIcon />
+                  Manage Integrations
+                </Button>
+              </Link>
             </Flex>
           </Flex>
         </Card>
