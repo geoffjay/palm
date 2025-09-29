@@ -321,7 +321,7 @@ const server = serve({
             return new Response(null, {
               status: 302,
               headers: {
-                Location: `${process.env.FRONTEND_URL || server.url.toString()}settings?integration=error&message=${encodeURIComponent("Integration failed")}`,
+                Location: `${process.env.FRONTEND_URL || server.url.toString()}/settings?integration=error&message=${encodeURIComponent("Integration failed")}`,
               },
             });
           }
@@ -330,7 +330,7 @@ const server = serve({
             return new Response(null, {
               status: 302,
               headers: {
-                Location: `${process.env.FRONTEND_URL || server.url.toString()}settings?integration=error&message=${encodeURIComponent("Missing authorization code")}`,
+                Location: `${process.env.FRONTEND_URL || server.url.toString()}/settings?integration=error&message=${encodeURIComponent("Missing authorization code")}`,
               },
             });
           }
@@ -339,7 +339,7 @@ const server = serve({
           if (usedAuthCodes.has(code)) {
             console.log("⚠️ Authorization code already used, ignoring duplicate request");
             const baseUrl = process.env.FRONTEND_URL || server.url.toString();
-            const redirectUrl = `${baseUrl}integrations?integration=success&provider=${providerId}`;
+            const redirectUrl = `${baseUrl}/integrations?integration=success&provider=${providerId}`;
             console.log("🔄 Redirecting to:", redirectUrl);
             return new Response(null, {
               status: 302,
@@ -365,7 +365,7 @@ const server = serve({
           return new Response(null, {
             status: 302,
             headers: {
-              Location: `${process.env.FRONTEND_URL || server.url.toString()}integrations?integration=success&provider=${providerId}`,
+              Location: `${process.env.FRONTEND_URL || server.url.toString()}/integrations?integration=success&provider=${providerId}`,
             },
           });
         } catch (error) {
@@ -373,7 +373,7 @@ const server = serve({
           return new Response(null, {
             status: 302,
             headers: {
-              Location: `${process.env.FRONTEND_URL || server.url.toString()}integrations?integration=error&message=${encodeURIComponent("Connection failed")}`,
+              Location: `${process.env.FRONTEND_URL || server.url.toString()}/integrations?integration=error&message=${encodeURIComponent("Connection failed")}`,
             },
           });
         }
