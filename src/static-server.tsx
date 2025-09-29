@@ -45,6 +45,173 @@ const server = serve({
       POST: (req: AuthenticatedRequest) => oauthHandlers.refreshSession(req),
     },
 
+    // Data source integration endpoints
+    "/api/integrations": {
+      GET: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
+        const { IntegrationService } = await import("../src/integrations/integrationService");
+        const integrationService = new IntegrationService();
+
+        try {
+          const available = integrationService.getAvailableIntegrations();
+          const { userService } = await import("../db/services");
+          const dbUser = await userService.findByGoogleId(req.user?.userId || "");
+
+          if (!dbUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+          }
+
+          const connected = await integrationService.getUserConnections(dbUser.id);
+
+          return Response.json({
+            available,
+            connected: connected.map((conn) => ({
+              id: conn.id,
+              providerId: conn.providerId,
+              isActive: conn.isActive,
+              connectedAt: conn.connectedAt,
+              lastSyncAt: conn.lastSyncAt,
+              syncStatus: conn.syncStatus,
+            })),
+          });
+        } catch (error) {
+          console.error("Error fetching integrations:", error);
+          return Response.json({ error: "Failed to fetch integrations" }, { status: 500 });
+        }
+      }),
+    },
+
+    "/api/integrations/:providerId/connect": {
+      POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
+        const { IntegrationService } = await import("../src/integrations/integrationService");
+        const integrationService = new IntegrationService();
+
+        try {
+          const url = new URL(req.url);
+          const providerId = url.pathname.split("/")[3]; // Extract providerId from path
+          const { userService } = await import("../db/services");
+          const dbUser = await userService.findByGoogleId(req.user?.userId || "");
+
+          if (!dbUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+          }
+
+          const authUrl = await integrationService.initiateConnection(dbUser.id, providerId);
+
+          return Response.json({ authUrl });
+        } catch (error) {
+          console.error("Error initiating connection:", error);
+          return Response.json({ error: "Failed to initiate connection" }, { status: 500 });
+        }
+      }),
+    },
+
+    "/api/integrations/:providerId/callback": {
+      GET: async (req: Request) => {
+        const { IntegrationService } = await import("../src/integrations/integrationService");
+        const integrationService = new IntegrationService();
+
+        try {
+          const url = new URL(req.url);
+          const providerId = url.pathname.split("/")[3]; // Extract providerId from path
+          const code = url.searchParams.get("code");
+          const state = url.searchParams.get("state"); // userId
+          const error = url.searchParams.get("error");
+
+          if (error) {
+            console.error("Integration OAuth error:", error);
+            return new Response(null, {
+              status: 302,
+              headers: {
+                Location: `${process.env.FRONTEND_URL}/settings?integration=error&message=${encodeURIComponent("Integration failed")}`,
+              },
+            });
+          }
+
+          if (!code || !state) {
+            return new Response(null, {
+              status: 302,
+              headers: {
+                Location: `${process.env.FRONTEND_URL}/settings?integration=error&message=${encodeURIComponent("Missing authorization code")}`,
+              },
+            });
+          }
+
+          const userId = parseInt(state, 10);
+          await integrationService.handleCallback(code, providerId, userId);
+
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: `${process.env.FRONTEND_URL}/settings?integration=success&provider=${providerId}`,
+            },
+          });
+        } catch (error) {
+          console.error("Integration callback error:", error);
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: `${process.env.FRONTEND_URL}/settings?integration=error&message=${encodeURIComponent("Connection failed")}`,
+            },
+          });
+        }
+      },
+    },
+
+    "/api/integrations/:connectionId/sync": {
+      POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
+        const { IntegrationService } = await import("../src/integrations/integrationService");
+        const integrationService = new IntegrationService();
+
+        try {
+          const url = new URL(req.url);
+          const connectionId = parseInt(url.pathname.split("/")[3], 10);
+          const { userService } = await import("../db/services");
+          const dbUser = await userService.findByGoogleId(req.user?.userId || "");
+
+          if (!dbUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+          }
+
+          const dataPoints = await integrationService.syncConnection(connectionId);
+          await integrationService.saveBiometricData(dbUser.id, dataPoints);
+
+          return Response.json({
+            success: true,
+            dataPointsCount: dataPoints.length,
+            message: `Imported ${dataPoints.length} data points`,
+          });
+        } catch (error) {
+          console.error("Error syncing connection:", error);
+          return Response.json({ error: "Failed to sync data" }, { status: 500 });
+        }
+      }),
+    },
+
+    "/api/integrations/:connectionId/disconnect": {
+      DELETE: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
+        const { IntegrationService } = await import("../src/integrations/integrationService");
+        const integrationService = new IntegrationService();
+
+        try {
+          const url = new URL(req.url);
+          const connectionId = parseInt(url.pathname.split("/")[3], 10);
+          const { userService } = await import("../db/services");
+          const dbUser = await userService.findByGoogleId(req.user?.userId || "");
+
+          if (!dbUser) {
+            return Response.json({ error: "User not found" }, { status: 404 });
+          }
+
+          await integrationService.disconnectSource(connectionId, dbUser.id);
+
+          return Response.json({ success: true, message: "Integration disconnected" });
+        } catch (error) {
+          console.error("Error disconnecting integration:", error);
+          return Response.json({ error: "Failed to disconnect integration" }, { status: 500 });
+        }
+      }),
+    },
+
     // Public API routes
     "/api/hello": {
       async GET(_req) {

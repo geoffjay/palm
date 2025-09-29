@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { BiometricsPage } from "./components/BiometricsPage";
 import { Dashboard } from "./components/Dashboard";
+import { IntegrationsPage } from "./components/IntegrationsPage";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { ProfilePage } from "./components/ProfilePage";
 import { SettingsPage } from "./components/SettingsPage";
@@ -25,6 +26,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/biometrics" element={<BiometricsPage />} />
+          <Route path="/integrations" element={<IntegrationsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

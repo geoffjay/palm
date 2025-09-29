@@ -183,6 +183,38 @@ export const biometricMeasurementsRelations = relations(biometricMeasurements, (
 }));
 
 /**
+ * Data source connections table for storing external integrations
+ */
+export const dataSourceConnections = pgTable(
+  "data_source_connections",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    providerId: varchar("provider_id", { length: 50 }).notNull(), // 'google_fit', 'apple_health', etc.
+    providerUserId: varchar("provider_user_id", { length: 255 }), // External user ID if available
+    accessToken: text("access_token").notNull(),
+    refreshToken: text("refresh_token"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    scopes: text("scopes"), // JSON array of granted scopes
+    isActive: boolean("is_active").default(true).notNull(),
+    connectedAt: timestamp("connected_at", { withTimezone: true }).defaultNow().notNull(),
+    lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+    syncStatus: varchar("sync_status", { length: 20 }).default("active"), // 'active', 'error', 'paused'
+    syncError: text("sync_error"), // Last sync error message
+    metadata: text("metadata"), // JSON for provider-specific data
+  },
+  (table) => {
+    return {
+      userProviderIdx: index("idx_data_source_user_provider").on(table.userId, table.providerId),
+      providerIdx: index("idx_data_source_provider").on(table.providerId),
+      activeIdx: index("idx_data_source_active").on(table.isActive),
+    };
+  },
+);
+
+/**
  * Type exports for use throughout the application
  */
 export type User = typeof users.$inferSelect;
@@ -196,3 +228,6 @@ export type BiometricMeasurementSubtype = typeof biometricMeasurementSubtypes.$i
 export type NewBiometricMeasurementSubtype = typeof biometricMeasurementSubtypes.$inferInsert;
 export type BiometricMeasurement = typeof biometricMeasurements.$inferSelect;
 export type NewBiometricMeasurement = typeof biometricMeasurements.$inferInsert;
+
+export type DataSourceConnection = typeof dataSourceConnections.$inferSelect;
+export type NewDataSourceConnection = typeof dataSourceConnections.$inferInsert;
