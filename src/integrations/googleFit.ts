@@ -35,6 +35,14 @@ export class GoogleFitIntegration implements DataSourceIntegration {
     this.clientId = process.env.GOOGLE_CLIENT_ID!;
     this.clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
     this.redirectUri = `${process.env.BASE_URL || "http://localhost:3000"}/api/integrations/google_fit/callback`;
+
+    // Debug logging (remove in production)
+    console.log("GoogleFit Integration initialized:", {
+      hasClientId: !!this.clientId,
+      hasClientSecret: !!this.clientSecret,
+      redirectUri: this.redirectUri,
+      clientIdPrefix: this.clientId?.substring(0, 10) + "...",
+    });
   }
 
   /**
@@ -193,7 +201,19 @@ export class GoogleFitIntegration implements DataSourceIntegration {
     });
 
     if (!response.ok) {
-      throw new Error(`Token exchange failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("Google token exchange error:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        requestBody: {
+          client_id: this.clientId,
+          redirect_uri: this.redirectUri,
+          grant_type: "authorization_code",
+          // Don't log the actual code or secret for security
+        },
+      });
+      throw new Error(`Token exchange failed: ${response.statusText} - ${errorText}`);
     }
 
     return response.json();
