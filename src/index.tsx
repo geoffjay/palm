@@ -9,6 +9,9 @@ import index from "./index.html";
 const oauthHandlers = new OAuthHandlers();
 const authMiddleware = new AuthMiddleware();
 
+// Cache to prevent duplicate authorization code usage
+const usedAuthCodes = new Set<string>();
+
 const server = serve({
   routes: {
     // Authentication routes (must come before catch-all)
@@ -327,6 +330,27 @@ const server = serve({
                 Location: `${process.env.FRONTEND_URL || server.url}settings?integration=error&message=${encodeURIComponent("Missing authorization code")}`,
               },
             });
+          }
+
+          // Check if this authorization code has already been used
+          if (usedAuthCodes.has(code)) {
+            console.log("⚠️ Authorization code already used, ignoring duplicate request");
+            return new Response(null, {
+              status: 302,
+              headers: {
+                Location: `${process.env.FRONTEND_URL || server.url}integrations?integration=success&provider=${providerId}`,
+              },
+            });
+          }
+
+          // Mark this code as used
+          usedAuthCodes.add(code);
+
+          // Clean up old codes (keep only last 100 to prevent memory leak)
+          if (usedAuthCodes.size > 100) {
+            const codesArray = Array.from(usedAuthCodes);
+            usedAuthCodes.clear();
+            codesArray.slice(-50).forEach((c) => usedAuthCodes.add(c));
           }
 
           const userId = parseInt(state, 10);
