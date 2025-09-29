@@ -34,7 +34,7 @@ export class GoogleFitIntegration implements DataSourceIntegration {
   constructor() {
     this.clientId = process.env.GOOGLE_CLIENT_ID!;
     this.clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
-    this.redirectUri = `${process.env.BASE_URL}/integrations/google-fit/callback`;
+    this.redirectUri = `${process.env.BASE_URL || "http://localhost:3000"}/api/integrations/google_fit/callback`;
   }
 
   /**
