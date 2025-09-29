@@ -241,8 +241,12 @@ export class GoogleFitIntegration implements DataSourceIntegration {
     startTime: Date,
     endTime: Date,
   ): Promise<BiometricDataPoint[]> {
-    const startTimeNanos = (startTime.getTime() * 1000000).toString();
-    const endTimeNanos = (endTime.getTime() * 1000000).toString();
+    console.log(`🔄 Fetching Google Fit data for ${dataType}`, {
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      hasToken: !!connection.accessToken,
+      tokenPrefix: connection.accessToken?.substring(0, 20) + "...",
+    });
 
     const response = await fetch(`https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`, {
       method: "POST",
@@ -259,7 +263,14 @@ export class GoogleFitIntegration implements DataSourceIntegration {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${dataType}: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Google Fit API error for ${dataType}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+      throw new Error(`Failed to fetch ${dataType}: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
