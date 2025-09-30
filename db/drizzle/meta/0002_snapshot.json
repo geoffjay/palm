@@ -84,12 +84,8 @@
           "name": "biometric_measurement_subtypes_measurement_type_id_biometric_measurement_types_id_fk",
           "tableFrom": "biometric_measurement_subtypes",
           "tableTo": "biometric_measurement_types",
-          "columnsFrom": [
-            "measurement_type_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["measurement_type_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -179,9 +175,7 @@
         "biometric_measurement_types_name_unique": {
           "name": "biometric_measurement_types_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -322,12 +316,8 @@
           "name": "biometric_measurements_user_id_users_id_fk",
           "tableFrom": "biometric_measurements",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -335,12 +325,8 @@
           "name": "biometric_measurements_measurement_type_id_biometric_measurement_types_id_fk",
           "tableFrom": "biometric_measurements",
           "tableTo": "biometric_measurement_types",
-          "columnsFrom": [
-            "measurement_type_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["measurement_type_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -348,12 +334,8 @@
           "name": "biometric_measurements_measurement_subtype_id_biometric_measurement_subtypes_id_fk",
           "tableFrom": "biometric_measurements",
           "tableTo": "biometric_measurement_subtypes",
-          "columnsFrom": [
-            "measurement_subtype_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["measurement_subtype_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -514,12 +496,8 @@
           "name": "data_source_connections_user_id_users_id_fk",
           "tableFrom": "data_source_connections",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -652,12 +630,8 @@
           "name": "user_sessions_user_id_users_id_fk",
           "tableFrom": "user_sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -667,9 +641,7 @@
         "user_sessions_session_id_unique": {
           "name": "user_sessions_session_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "session_id"
-          ]
+          "columns": ["session_id"]
         }
       },
       "policies": {},
@@ -781,16 +753,12 @@
         "users_google_id_unique": {
           "name": "users_google_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "google_id"
-          ]
+          "columns": ["google_id"]
         },
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},

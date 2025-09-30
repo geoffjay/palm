@@ -533,7 +533,7 @@ function CaloriesBarChart() {
 
   // Get all measurement keys from the data
   const allKeys = barData.reduce((keys: Set<string>, item) => {
-    Object.keys(item).forEach(key => {
+    Object.keys(item).forEach((key) => {
       if (key !== "date") {
         keys.add(key);
       }
