@@ -222,6 +222,70 @@ export function useBloodPressure() {
 }
 
 /**
+ * Hook for step count specific data
+ */
+export function useSteps() {
+  const { getFilteredMeasurements, getMeasurementTypeByName } = useBiometricStore();
+
+  const stepsType = getMeasurementTypeByName("steps");
+  const stepMeasurements = getFilteredMeasurements().filter((m) => stepsType && m.measurementTypeId === stepsType.id);
+
+  // Transform data for calendar chart
+  const calendarData = stepMeasurements.map((m) => ({
+    day: m.measuredAt.toISOString().split("T")[0], // YYYY-MM-DD format
+    value: Number(m.value),
+  }));
+
+  return {
+    stepMeasurements,
+    calendarData,
+  };
+}
+
+/**
+ * Hook for calories burned specific data
+ */
+export function useCalories() {
+  const { getFilteredMeasurements, getMeasurementTypeByName } = useBiometricStore();
+
+  const caloriesType = getMeasurementTypeByName("calories_burned");
+  const calorieMeasurements = getFilteredMeasurements().filter(
+    (m) => caloriesType && m.measurementTypeId === caloriesType.id,
+  );
+
+  // Get last 7 days of data for bar chart
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const recentCalories = calorieMeasurements.filter((m) => new Date(m.measuredAt) >= sevenDaysAgo);
+
+  // Group by date and create bar chart data
+  const groupedByDate: { [key: string]: number[] } = {};
+  recentCalories.forEach((m) => {
+    const date = m.measuredAt.toISOString().split("T")[0];
+    if (!groupedByDate[date]) {
+      groupedByDate[date] = [];
+    }
+    groupedByDate[date].push(Number(m.value));
+  });
+
+  // Transform for stacked bar chart
+  const barData = Object.entries(groupedByDate).map(([date, values]) => {
+    const dayData: { [key: string]: string | number } = { date };
+    values.forEach((value, index) => {
+      dayData[`measurement_${index + 1}`] = value;
+    });
+    return dayData;
+  });
+
+  return {
+    calorieMeasurements,
+    recentCalories,
+    barData,
+  };
+}
+
+/**
  * Hook for filtering biometric data
  */
 export function useBiometricFilters() {

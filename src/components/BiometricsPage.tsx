@@ -3,11 +3,13 @@
  * Displays biometric measurements with charts and management features
  */
 
+import { ResponsiveBar } from "@nivo/bar";
+import { ResponsiveCalendar } from "@nivo/calendar";
 import { ResponsiveLine } from "@nivo/line";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "@radix-ui/react-icons";
 import { Button, Card, Flex, Grid, Heading, Table, Text } from "@radix-ui/themes";
 import { useState } from "react";
-import { useBiometrics, useBloodPressure, useHeartRate } from "../hooks/useBiometrics";
+import { useBiometrics, useBloodPressure, useCalories, useHeartRate, useSteps } from "../hooks/useBiometrics";
 import { useBiometricStore } from "../stores/biometricStore";
 import { AddMeasurementDialog } from "./AddMeasurementDialog";
 import { ProtectedLayout } from "./ProtectedLayout";
@@ -80,6 +82,12 @@ export function BiometricsPage() {
         <Grid columns={{ initial: "1", lg: "2" }} gap="6">
           <HeartRateChart />
           <BloodPressureChart />
+        </Grid>
+
+        {/* Activity Charts */}
+        <Grid columns={{ initial: "1", lg: "2" }} gap="6">
+          <StepsCalendarChart />
+          <CaloriesBarChart />
         </Grid>
 
         {/* Recent Measurements */}
@@ -438,6 +446,168 @@ function RecentMeasurements({ measurements, currentPage, itemsPerPage, onPageCha
           onPageChange={onPageChange}
           totalItems={totalItems}
         />
+      </Flex>
+    </Card>
+  );
+}
+
+function StepsCalendarChart() {
+  const { calendarData } = useSteps();
+
+  if (!calendarData || calendarData.length === 0) {
+    return (
+      <Card variant="surface">
+        <Flex direction="column" p="6" height="300px">
+          <Heading size="4" mb="4">
+            Step Count Calendar
+          </Heading>
+          <Flex justify="center" align="center" flexGrow="1">
+            <Text color="gray">No step count data available</Text>
+          </Flex>
+        </Flex>
+      </Card>
+    );
+  }
+
+  // Get current year for the calendar
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <Card variant="surface">
+      <Flex direction="column" p="6" height="300px">
+        <Heading size="4" mb="4">
+          Step Count Calendar ({currentYear})
+        </Heading>
+        <div style={{ height: "200px" }}>
+          <ResponsiveCalendar
+            data={calendarData}
+            from={`${currentYear}-01-01`}
+            to={`${currentYear}-12-31`}
+            emptyColor="#eeeeee"
+            colors={["#61cdbb", "#97e3d5", "#e8c1a0", "#f47560"]}
+            minValue={0}
+            maxValue={20000}
+            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+            yearSpacing={40}
+            monthBorderColor="#ffffff"
+            dayBorderWidth={2}
+            dayBorderColor="#ffffff"
+            tooltip={({ day, value }) => (
+              <div
+                style={{
+                  background: "white",
+                  padding: "9px 12px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <strong>{day}</strong>
+                <br />
+                Steps: {value || 0}
+              </div>
+            )}
+          />
+        </div>
+      </Flex>
+    </Card>
+  );
+}
+
+function CaloriesBarChart() {
+  const { barData } = useCalories();
+
+  if (!barData || barData.length === 0) {
+    return (
+      <Card variant="surface">
+        <Flex direction="column" p="6" height="300px">
+          <Heading size="4" mb="4">
+            Calories Burned (Last 7 Days)
+          </Heading>
+          <Flex justify="center" align="center" flexGrow="1">
+            <Text color="gray">No calories data available</Text>
+          </Flex>
+        </Flex>
+      </Card>
+    );
+  }
+
+  // Get all measurement keys from the data
+  const allKeys = barData.reduce((keys: Set<string>, item) => {
+    Object.keys(item).forEach(key => {
+      if (key !== "date") {
+        keys.add(key);
+      }
+    });
+    return keys;
+  }, new Set<string>());
+
+  const measurementKeys = Array.from(allKeys);
+
+  return (
+    <Card variant="surface">
+      <Flex direction="column" p="6" height="300px">
+        <Heading size="4" mb="4">
+          Calories Burned (Last 7 Days)
+        </Heading>
+        <div style={{ height: "200px" }}>
+          <ResponsiveBar
+            data={barData}
+            keys={measurementKeys}
+            indexBy="date"
+            margin={{ top: 20, right: 30, bottom: 50, left: 60 }}
+            padding={0.3}
+            valueScale={{ type: "linear" }}
+            indexScale={{ type: "band", round: true }}
+            colors={{ scheme: "nivo" }}
+            borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
+            axisTop={null}
+            axisRight={null}
+            axisBottom={{
+              tickSize: 5,
+              tickPadding: 5,
+              tickRotation: -45,
+              legend: "Date",
+              legendPosition: "middle",
+              legendOffset: 40,
+            }}
+            axisLeft={{
+              tickSize: 5,
+              tickPadding: 5,
+              tickRotation: 0,
+              legend: "Calories (kcal)",
+              legendPosition: "middle",
+              legendOffset: -50,
+            }}
+            labelSkipWidth={12}
+            labelSkipHeight={12}
+            labelTextColor={{ from: "color", modifiers: [["darker", 1.6]] }}
+            tooltip={({ value, color, indexValue }) => (
+              <div
+                style={{
+                  background: "white",
+                  padding: "9px 12px",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", marginBottom: "4px" }}>
+                  <div
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: color,
+                      marginRight: "6px",
+                    }}
+                  />
+                  <strong>{indexValue}</strong>
+                </div>
+                {value} kcal
+              </div>
+            )}
+            animate={true}
+            motionConfig="wobbly"
+          />
+        </div>
       </Flex>
     </Card>
   );
