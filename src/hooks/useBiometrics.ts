@@ -232,7 +232,7 @@ export function useSteps() {
 
   // Transform data for calendar chart
   const calendarData = stepMeasurements.map((m) => ({
-    day: m.measuredAt.toISOString().split("T")[0], // YYYY-MM-DD format
+    day: new Date(m.measuredAt).toISOString().split("T")[0], // YYYY-MM-DD format
     value: Number(m.value),
   }));
 
@@ -262,7 +262,7 @@ export function useCalories() {
   // Group by date and create bar chart data
   const groupedByDate: { [key: string]: number[] } = {};
   recentCalories.forEach((m) => {
-    const date = m.measuredAt.toISOString().split("T")[0];
+    const date = new Date(m.measuredAt).toISOString().split("T")[0];
     if (!groupedByDate[date]) {
       groupedByDate[date] = [];
     }
