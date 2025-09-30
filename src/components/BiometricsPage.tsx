@@ -272,6 +272,17 @@ interface MeasurementData {
   value: string;
   notes: string | null;
   measuredAt: Date;
+  measurementType?: {
+    id: number;
+    name: string;
+    displayName: string;
+    unit: string;
+  };
+  measurementSubtype?: {
+    id: number;
+    name: string;
+    displayName: string;
+  };
 }
 
 function RecentMeasurements({ measurements }: { measurements: MeasurementData[] }) {
@@ -307,7 +318,10 @@ function RecentMeasurements({ measurements }: { measurements: MeasurementData[] 
               }}
             >
               <Flex direction="column" gap="1">
-                <Text weight="medium">Type {measurement.measurementTypeId}</Text>
+                <Text weight="medium">
+                  {measurement.measurementType?.displayName || `Type ${measurement.measurementTypeId}`}
+                  {measurement.measurementSubtype && ` (${measurement.measurementSubtype.displayName})`}
+                </Text>
                 <Text size="2" color="gray">
                   {new Date(measurement.measuredAt).toLocaleDateString()} at{" "}
                   {new Date(measurement.measuredAt).toLocaleTimeString([], {
@@ -316,7 +330,11 @@ function RecentMeasurements({ measurements }: { measurements: MeasurementData[] 
                   })}
                 </Text>
               </Flex>
-              <Text weight="bold">{measurement.value}</Text>
+              <Flex direction="column" align="end" gap="1">
+                <Text weight="bold">
+                  {measurement.value} {measurement.measurementType?.unit || ""}
+                </Text>
+              </Flex>
             </Flex>
           ))}
         </Flex>
