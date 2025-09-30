@@ -212,11 +212,29 @@ export class IntegrationService {
    */
   private mapDataTypeToMeasurementType(externalType: string): string | null {
     const typeMap: Record<string, string> = {
+      // Basic fitness metrics
       steps: "steps",
       heart_rate: "heart_rate",
       weight: "weight",
       calories: "calories_burned",
       sleep_duration: "sleep_duration",
+
+      // Additional fitness metrics
+      distance: "distance",
+      active_minutes: "active_minutes",
+      floors_climbed: "floors_climbed",
+      move_minutes: "move_minutes",
+      power: "power",
+      speed: "speed",
+
+      // Health metrics
+      hydration: "hydration",
+      nutrition: "nutrition",
+
+      // Blood pressure (handled separately in biometric service)
+      blood_pressure: "blood_pressure",
+      body_temperature: "body_temperature",
+      blood_glucose: "blood_glucose",
     };
 
     return typeMap[externalType] || null;
