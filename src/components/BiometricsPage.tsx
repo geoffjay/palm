@@ -485,8 +485,8 @@ function StepsCalendarChart() {
             to={`${currentYear}-12-31`}
             emptyColor="#eeeeee"
             colors={["#61cdbb", "#97e3d5", "#e8c1a0", "#f47560"]}
-            minValue={0}
-            maxValue={20000}
+            minValue="auto"
+            maxValue="auto"
             margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
             yearSpacing={40}
             monthBorderColor="#ffffff"
@@ -556,7 +556,7 @@ function CaloriesBarChart() {
             indexBy="date"
             margin={{ top: 20, right: 30, bottom: 50, left: 60 }}
             padding={0.3}
-            valueScale={{ type: "linear" }}
+            valueScale={{ type: "linear", min: "auto", max: "auto" }}
             indexScale={{ type: "band", round: true }}
             colors={{ scheme: "nivo" }}
             borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
