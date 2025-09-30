@@ -486,11 +486,11 @@ function StepsCalendarChart() {
 
   return (
     <Card variant="surface">
-      <Flex direction="column" p="6" height="300px">
+      <Flex direction="column" p="6" height="400px">
         <Heading size="4" mb="4">
           Step Count Calendar ({currentYear})
         </Heading>
-        <div style={{ height: "200px" }}>
+        <div style={{ height: "300px" }}>
           <ResponsiveCalendar
             data={validCalendarData}
             from={`${currentYear}-01-01`}
@@ -499,8 +499,8 @@ function StepsCalendarChart() {
             colors={["#61cdbb", "#97e3d5", "#e8c1a0", "#f47560"]}
             minValue={minValue}
             maxValue={finalMaxValue}
-            margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-            yearSpacing={40}
+            margin={{ top: 40, right: 20, bottom: 20, left: 20 }}
+            yearSpacing={0}
             monthBorderColor="#ffffff"
             dayBorderWidth={2}
             dayBorderColor="#ffffff"

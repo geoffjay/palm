@@ -183,6 +183,8 @@ export class IntegrationService {
    */
   async saveBiometricData(userId: number, dataPoints: BiometricDataPoint[]): Promise<void> {
     const { biometricService } = await import("../../db/services");
+    let savedCount = 0;
+    let skippedCount = 0;
 
     for (const point of dataPoints) {
       try {
@@ -190,6 +192,21 @@ export class IntegrationService {
         const measurementType = this.mapDataTypeToMeasurementType(point.type);
         if (!measurementType) {
           console.warn(`Unknown data type: ${point.type}`);
+          continue;
+        }
+
+        // Check if measurement already exists to prevent duplicates
+        const exists = await biometricService.measurementExists(
+          userId,
+          measurementType,
+          point.value,
+          point.timestamp,
+          5, // 5-minute tolerance for duplicate detection
+        );
+
+        if (exists) {
+          skippedCount++;
+          console.log(`Skipping duplicate measurement: ${measurementType} = ${point.value} at ${point.timestamp}`);
           continue;
         }
 
@@ -201,10 +218,13 @@ export class IntegrationService {
           point.timestamp,
           `Imported from ${point.source}`,
         );
+        savedCount++;
       } catch (error) {
         console.error(`Failed to save biometric data point:`, error);
       }
     }
+
+    console.log(`Sync completed: ${savedCount} new measurements saved, ${skippedCount} duplicates skipped`);
   }
 
   /**

@@ -139,6 +139,42 @@ export class BiometricService {
   }
 
   /**
+   * Check if a measurement already exists for the given parameters
+   */
+  async measurementExists(
+    userId: number,
+    measurementTypeName: string,
+    value: number,
+    measuredAt: Date,
+    toleranceMinutes: number = 5,
+  ): Promise<boolean> {
+    const measurementType = await this.getMeasurementTypeByName(measurementTypeName);
+    if (!measurementType) {
+      return false;
+    }
+
+    // Create a time range to check for measurements within tolerance
+    const startTime = new Date(measuredAt.getTime() - toleranceMinutes * 60 * 1000);
+    const endTime = new Date(measuredAt.getTime() + toleranceMinutes * 60 * 1000);
+
+    const existing = await db
+      .select()
+      .from(schema.biometricMeasurements)
+      .where(
+        and(
+          eq(schema.biometricMeasurements.userId, userId),
+          eq(schema.biometricMeasurements.measurementTypeId, measurementType.id),
+          eq(schema.biometricMeasurements.value, value.toString()),
+          gte(schema.biometricMeasurements.measuredAt, startTime),
+          lte(schema.biometricMeasurements.measuredAt, endTime),
+        ),
+      )
+      .limit(1);
+
+    return existing.length > 0;
+  }
+
+  /**
    * Get latest blood pressure reading (both systolic and diastolic)
    */
   async getLatestBloodPressure(userId: number): Promise<BloodPressureReading | null> {
