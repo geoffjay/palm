@@ -454,7 +454,11 @@ function RecentMeasurements({ measurements, currentPage, itemsPerPage, onPageCha
 function StepsCalendarChart() {
   const { calendarData } = useSteps();
 
-  if (!calendarData || calendarData.length === 0) {
+  // Validate and filter calendar data
+  const validCalendarData =
+    calendarData?.filter((d) => d.day && typeof d.value === "number" && !Number.isNaN(d.value) && d.value >= 0) || [];
+
+  if (validCalendarData.length === 0) {
     return (
       <Card variant="surface">
         <Flex direction="column" p="6" height="300px">
@@ -472,6 +476,14 @@ function StepsCalendarChart() {
   // Get current year for the calendar
   const currentYear = new Date().getFullYear();
 
+  // Calculate min/max values for better scale control
+  const values = validCalendarData.map((d) => d.value);
+  const minValue = Math.max(0, Math.min(...values));
+  const maxValue = Math.max(...values);
+
+  // Ensure we have a reasonable range
+  const finalMaxValue = maxValue > minValue ? maxValue : Math.max(minValue + 1, 100);
+
   return (
     <Card variant="surface">
       <Flex direction="column" p="6" height="300px">
@@ -480,13 +492,13 @@ function StepsCalendarChart() {
         </Heading>
         <div style={{ height: "200px" }}>
           <ResponsiveCalendar
-            data={calendarData}
+            data={validCalendarData}
             from={`${currentYear}-01-01`}
             to={`${currentYear}-12-31`}
             emptyColor="#eeeeee"
             colors={["#61cdbb", "#97e3d5", "#e8c1a0", "#f47560"]}
-            minValue="auto"
-            maxValue="auto"
+            minValue={minValue}
+            maxValue={finalMaxValue}
             margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
             yearSpacing={40}
             monthBorderColor="#ffffff"
@@ -516,7 +528,18 @@ function StepsCalendarChart() {
 function CaloriesBarChart() {
   const { barData } = useCalories();
 
-  if (!barData || barData.length === 0) {
+  // Validate bar data
+  const validBarData =
+    barData?.filter(
+      (item) =>
+        item.date &&
+        Object.keys(item).length > 1 && // Has more than just the date key
+        Object.entries(item).some(
+          ([key, value]) => key !== "date" && typeof value === "number" && !Number.isNaN(value) && value >= 0,
+        ),
+    ) || [];
+
+  if (validBarData.length === 0) {
     return (
       <Card variant="surface">
         <Flex direction="column" p="6" height="300px">
@@ -531,8 +554,8 @@ function CaloriesBarChart() {
     );
   }
 
-  // Get all measurement keys from the data
-  const allKeys = barData.reduce((keys: Set<string>, item) => {
+  // Get all measurement keys from the validated data
+  const allKeys = validBarData.reduce((keys: Set<string>, item) => {
     Object.keys(item).forEach((key) => {
       if (key !== "date") {
         keys.add(key);
@@ -543,6 +566,22 @@ function CaloriesBarChart() {
 
   const measurementKeys = Array.from(allKeys);
 
+  // Ensure we have valid measurement keys
+  if (measurementKeys.length === 0) {
+    return (
+      <Card variant="surface">
+        <Flex direction="column" p="6" height="300px">
+          <Heading size="4" mb="4">
+            Calories Burned (Last 7 Days)
+          </Heading>
+          <Flex justify="center" align="center" flexGrow="1">
+            <Text color="gray">No valid calories measurements found</Text>
+          </Flex>
+        </Flex>
+      </Card>
+    );
+  }
+
   return (
     <Card variant="surface">
       <Flex direction="column" p="6" height="300px">
@@ -551,12 +590,12 @@ function CaloriesBarChart() {
         </Heading>
         <div style={{ height: "200px" }}>
           <ResponsiveBar
-            data={barData}
+            data={validBarData}
             keys={measurementKeys}
             indexBy="date"
             margin={{ top: 20, right: 30, bottom: 50, left: 60 }}
             padding={0.3}
-            valueScale={{ type: "linear", min: "auto", max: "auto" }}
+            valueScale={{ type: "linear", min: 0 }}
             indexScale={{ type: "band", round: true }}
             colors={{ scheme: "nivo" }}
             borderColor={{ from: "color", modifiers: [["darker", 1.6]] }}
