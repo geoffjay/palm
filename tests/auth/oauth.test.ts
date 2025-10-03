@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { SignJWT, importPKCS8 } from "jose";
 
 // Mock fetch globally
 global.fetch = mock(async (url: string) => {
@@ -94,30 +95,93 @@ describe("GoogleOAuth", () => {
     expect(userInfo.name).toBe("Test User");
   });
 
-  test("verifyIdToken - should decode ID token", async () => {
+  test("verifyIdToken - should throw error for invalid token signature", async () => {
     const oauth = new GoogleOAuth();
-    // Create a mock JWT token (header.payload.signature)
+    // Create a mock JWT with invalid signature
     const mockPayload = {
-      id: "mock_google_id",
+      sub: "mock_google_id",
       email: "test@example.com",
       name: "Test User",
-      aud: process.env.GOOGLE_CLIENT_ID, // Use the actual client ID from environment
-      exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      picture: "https://example.com/avatar.jpg",
+      given_name: "Test",
+      family_name: "User",
+      aud: process.env.GOOGLE_CLIENT_ID,
+      iss: "https://accounts.google.com",
+      exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const encodedPayload = btoa(JSON.stringify(mockPayload));
-    const mockToken = `eyJhbGciOiJSUzI1NiJ9.${encodedPayload}.signature`;
+    const invalidToken = `eyJhbGciOiJSUzI1NiJ9.${encodedPayload}.invalid_signature`;
 
-    const decoded = await oauth.verifyIdToken(mockToken);
-
-    expect(decoded.id).toBe("mock_google_id");
-    expect(decoded.email).toBe("test@example.com");
+    try {
+      await oauth.verifyIdToken(invalidToken);
+      expect(true).toBe(false); // Should not reach here
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toContain("Invalid ID token");
+    }
   });
 
-  test("verifyIdToken - should throw error for invalid token", async () => {
+  test("verifyIdToken - should throw error for malformed token", async () => {
     const oauth = new GoogleOAuth();
 
-    expect(async () => {
+    try {
       await oauth.verifyIdToken("invalid.token");
-    }).toThrow("Invalid ID token format");
+      expect(true).toBe(false); // Should not reach here
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toContain("Invalid ID token");
+    }
+  });
+
+  test("verifyIdToken - should throw error for expired token", async () => {
+    const oauth = new GoogleOAuth();
+    // Create a mock JWT with expired timestamp
+    const expiredPayload = {
+      sub: "mock_google_id",
+      email: "test@example.com",
+      name: "Test User",
+      picture: "https://example.com/avatar.jpg",
+      given_name: "Test",
+      family_name: "User",
+      aud: process.env.GOOGLE_CLIENT_ID,
+      iss: "https://accounts.google.com",
+      exp: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
+    };
+    const encodedPayload = btoa(JSON.stringify(expiredPayload));
+    const expiredToken = `eyJhbGciOiJSUzI1NiJ9.${encodedPayload}.signature`;
+
+    try {
+      await oauth.verifyIdToken(expiredToken);
+      expect(true).toBe(false); // Should not reach here
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toContain("Invalid ID token");
+    }
+  });
+
+  test("verifyIdToken - should throw error for wrong audience", async () => {
+    const oauth = new GoogleOAuth();
+    // Create a mock JWT with wrong audience
+    const wrongAudPayload = {
+      sub: "mock_google_id",
+      email: "test@example.com",
+      name: "Test User",
+      picture: "https://example.com/avatar.jpg",
+      given_name: "Test",
+      family_name: "User",
+      aud: "wrong_client_id",
+      iss: "https://accounts.google.com",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const encodedPayload = btoa(JSON.stringify(wrongAudPayload));
+    const wrongAudToken = `eyJhbGciOiJSUzI1NiJ9.${encodedPayload}.signature`;
+
+    try {
+      await oauth.verifyIdToken(wrongAudToken);
+      expect(true).toBe(false); // Should not reach here
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toContain("Invalid ID token");
+    }
   });
 });
