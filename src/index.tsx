@@ -4,6 +4,8 @@ import { OAuthHandlers } from "./auth/handlers";
 import type { AuthenticatedRequest } from "./auth/middleware";
 import { AuthMiddleware } from "./auth/middleware";
 import { validateBody, handleValidationError } from "./middleware/validation";
+import { rateLimitMiddleware } from "./middleware/rateLimit";
+import { authRateLimit, apiRateLimit, syncRateLimit } from "./middleware/rateLimiters";
 import { createMeasurementSchema } from "./validation/schemas";
 import index from "./index.html";
 
@@ -19,25 +21,45 @@ usedAuthCodes.clear();
 
 const server = serve({
   routes: {
-    // Authentication routes (must come before catch-all)
+    // Authentication routes with rate limiting (must come before catch-all)
     "/auth/google": {
-      GET: (req: Request) => oauthHandlers.initiateGoogleAuth(req),
+      GET: async (req: Request) => {
+        const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
+        return oauthHandlers.initiateGoogleAuth(req);
+      },
     },
 
     "/auth/google/callback": {
-      GET: (req: Request) => oauthHandlers.handleGoogleCallback(req),
+      GET: async (req: Request) => {
+        const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
+        return oauthHandlers.handleGoogleCallback(req);
+      },
     },
 
     "/auth/logout": {
-      POST: (req: AuthenticatedRequest) => oauthHandlers.handleLogout(req),
+      POST: async (req: AuthenticatedRequest) => {
+        const rateLimitResponse = await rateLimitMiddleware(apiRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
+        return oauthHandlers.handleLogout(req);
+      },
     },
 
     "/auth/user": {
-      GET: (req: AuthenticatedRequest) => oauthHandlers.getCurrentUser(req),
+      GET: async (req: AuthenticatedRequest) => {
+        const rateLimitResponse = await rateLimitMiddleware(apiRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
+        return oauthHandlers.getCurrentUser(req);
+      },
     },
 
     "/auth/refresh": {
-      POST: (req: AuthenticatedRequest) => oauthHandlers.refreshSession(req),
+      POST: async (req: AuthenticatedRequest) => {
+        const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
+        return oauthHandlers.refreshSession(req);
+      },
     },
 
     // Public API routes
@@ -389,6 +411,10 @@ const server = serve({
 
     "/api/integrations/:connectionId/sync": {
       POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
+        // Apply strict rate limiting for expensive sync operations
+        const rateLimitResponse = await rateLimitMiddleware(syncRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
+
         const { IntegrationService } = await import("./integrations/integrationService");
         const integrationService = new IntegrationService();
 
