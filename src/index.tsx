@@ -6,6 +6,7 @@ import { AuthMiddleware } from "./auth/middleware";
 import { validateBody, handleValidationError } from "./middleware/validation";
 import { rateLimitMiddleware } from "./middleware/rateLimit";
 import { authRateLimit, apiRateLimit, syncRateLimit } from "./middleware/rateLimiters";
+import { securityHeaders } from "./middleware/security";
 import { createMeasurementSchema } from "./validation/schemas";
 import index from "./index.html";
 
@@ -19,47 +20,55 @@ const usedAuthCodes = new Set<string>();
 // Clear cache on startup (helpful for development)
 usedAuthCodes.clear();
 
+// Helper to wrap handlers with security headers
+const withSecurity = (handler: (req: Request) => Promise<Response>) => {
+  return async (req: Request) => {
+    const response = await handler(req);
+    return securityHeaders(response);
+  };
+};
+
 const server = serve({
   routes: {
     // Authentication routes with rate limiting (must come before catch-all)
     "/auth/google": {
-      GET: async (req: Request) => {
+      GET: withSecurity(async (req: Request) => {
         const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
         if (rateLimitResponse) return rateLimitResponse;
         return oauthHandlers.initiateGoogleAuth(req);
-      },
+      }),
     },
 
     "/auth/google/callback": {
-      GET: async (req: Request) => {
+      GET: withSecurity(async (req: Request) => {
         const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
         if (rateLimitResponse) return rateLimitResponse;
         return oauthHandlers.handleGoogleCallback(req);
-      },
+      }),
     },
 
     "/auth/logout": {
-      POST: async (req: AuthenticatedRequest) => {
+      POST: withSecurity(async (req: AuthenticatedRequest) => {
         const rateLimitResponse = await rateLimitMiddleware(apiRateLimit)(req);
         if (rateLimitResponse) return rateLimitResponse;
         return oauthHandlers.handleLogout(req);
-      },
+      }),
     },
 
     "/auth/user": {
-      GET: async (req: AuthenticatedRequest) => {
+      GET: withSecurity(async (req: AuthenticatedRequest) => {
         const rateLimitResponse = await rateLimitMiddleware(apiRateLimit)(req);
         if (rateLimitResponse) return rateLimitResponse;
         return oauthHandlers.getCurrentUser(req);
-      },
+      }),
     },
 
     "/auth/refresh": {
-      POST: async (req: AuthenticatedRequest) => {
+      POST: withSecurity(async (req: AuthenticatedRequest) => {
         const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
         if (rateLimitResponse) return rateLimitResponse;
         return oauthHandlers.refreshSession(req);
-      },
+      }),
     },
 
     // Public API routes
