@@ -270,6 +270,13 @@ export class SessionManager {
   }
 
   /**
+   * Get Redis client for direct access (use with caution)
+   */
+  getRedisClient(): Redis {
+    return this.redis;
+  }
+
+  /**
    * Clean up expired sessions (can be called periodically)
    */
   async cleanupExpiredSessions(): Promise<number> {

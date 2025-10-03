@@ -22,15 +22,23 @@ export class OAuthHandlers {
    */
   async initiateGoogleAuth(_req: Request): Promise<Response> {
     try {
-      // Generate a state parameter for CSRF protection
+      // Generate cryptographically secure state parameter for CSRF protection
       const state = crypto.randomUUID();
+      const nonce = crypto.randomUUID();
 
-      // Store state in a short-lived cache or session
-      // For simplicity, we'll include it in the URL and verify on callback
+      // Store state in Redis with 10-minute expiration
+      const stateData = {
+        nonce,
+        createdAt: Date.now(),
+      };
+
+      await this.sessionManager.getRedisClient().setex(
+        `oauth:state:${state}`,
+        600, // 10 minutes
+        JSON.stringify(stateData),
+      );
+
       const authUrl = this.oauth.getAuthorizationUrl(state);
-
-      // For production, you might want to store the state server-side
-      // and validate it in the callback
 
       return Response.redirect(authUrl, 302);
     } catch (error) {
@@ -58,10 +66,10 @@ export class OAuthHandlers {
       console.log("🔐 OAuth callback started");
       const url = new URL(req.url);
       const code = url.searchParams.get("code");
-      const _state = url.searchParams.get("state");
+      const state = url.searchParams.get("state");
       const error = url.searchParams.get("error");
 
-      console.log("🔐 OAuth params - code:", !!code, "error:", error);
+      console.log("🔐 OAuth params - code:", !!code, "state:", !!state, "error:", error);
 
       // Check for OAuth errors
       if (error) {
@@ -74,8 +82,24 @@ export class OAuthHandlers {
         return this.redirectWithError("No authorization code received");
       }
 
-      // TODO: Validate state parameter for CSRF protection
-      // In production, compare with stored state
+      // Validate state parameter for CSRF protection
+      if (!state) {
+        console.error("🔐 Missing state parameter");
+        return this.redirectWithError("Missing state parameter - possible CSRF attack");
+      }
+
+      const redis = this.sessionManager.getRedisClient();
+      const storedStateData = await redis.get(`oauth:state:${state}`);
+
+      if (!storedStateData) {
+        console.error("🔐 Invalid or expired state parameter");
+        return this.redirectWithError("Invalid or expired state parameter - possible CSRF attack");
+      }
+
+      // Delete state to prevent replay attacks
+      await redis.del(`oauth:state:${state}`);
+
+      console.log("🔐 State validated successfully");
 
       console.log("🔐 Exchanging code for tokens...");
       // Exchange code for tokens
