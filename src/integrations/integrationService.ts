@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import type { DataSourceConnection, NewDataSourceConnection } from "../../db/schema";
 import { dataSourceConnections, users } from "../../db/schema";
+import { encrypt, decrypt } from "../utils/encryption";
 import { GoogleFitIntegration } from "./googleFit";
 import type { BiometricDataPoint, DataSourceIntegration } from "./types";
 
@@ -36,9 +37,16 @@ export class IntegrationService {
 
   /**
    * Get user's connected data sources
+   * Note: Tokens are returned encrypted for security. Decrypt only when needed for API calls.
    */
   async getUserConnections(userId: number): Promise<DataSourceConnection[]> {
-    return db.select().from(dataSourceConnections).where(eq(dataSourceConnections.userId, userId));
+    const connections = await db
+      .select()
+      .from(dataSourceConnections)
+      .where(eq(dataSourceConnections.userId, userId));
+
+    // Return connections with encrypted tokens (decrypt only when needed for API calls)
+    return connections;
   }
 
   /**
@@ -65,12 +73,12 @@ export class IntegrationService {
     // Get connection details from integration
     const connectionData = await integration.handleCallback(code, userId.toString());
 
-    // Save to database
+    // Encrypt tokens before storing in database
     const newConnection: NewDataSourceConnection = {
       userId,
       providerId,
-      accessToken: connectionData.accessToken,
-      refreshToken: connectionData.refreshToken,
+      accessToken: encrypt(connectionData.accessToken),
+      refreshToken: connectionData.refreshToken ? encrypt(connectionData.refreshToken) : null,
       expiresAt: connectionData.expiresAt,
       isActive: true,
       connectedAt: new Date(),
@@ -78,7 +86,12 @@ export class IntegrationService {
 
     const [savedConnection] = await db.insert(dataSourceConnections).values(newConnection).returning();
 
-    return savedConnection;
+    // Decrypt tokens in returned connection for immediate use
+    return {
+      ...savedConnection,
+      accessToken: decrypt(savedConnection.accessToken),
+      refreshToken: savedConnection.refreshToken ? decrypt(savedConnection.refreshToken) : null,
+    };
   }
 
   /**
@@ -100,8 +113,15 @@ export class IntegrationService {
       throw new Error(`Integration ${connection[0].providerId} not found`);
     }
 
+    // Decrypt tokens for use in API calls
+    const decryptedConnection: DataSourceConnection = {
+      ...connection[0],
+      accessToken: decrypt(connection[0].accessToken),
+      refreshToken: connection[0].refreshToken ? decrypt(connection[0].refreshToken) : null,
+    };
+
     try {
-      const result = await integration.syncData(connection[0], since);
+      const result = await integration.syncData(decryptedConnection, since);
 
       // Update last sync time
       await db
