@@ -2,6 +2,8 @@
  * Google OAuth implementation using Bun's native APIs
  */
 
+import { jwtVerify, createRemoteJWKSet } from "jose";
+
 interface GoogleTokenResponse {
   access_token: string;
   id_token: string;
@@ -28,6 +30,7 @@ interface OAuthConfig {
 
 export class GoogleOAuth {
   private config: OAuthConfig;
+  private jwks: ReturnType<typeof createRemoteJWKSet>;
 
   constructor() {
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -51,6 +54,11 @@ export class GoogleOAuth {
     if (!this.config.clientId || !this.config.clientSecret) {
       throw new Error("Missing required Google OAuth environment variables");
     }
+
+    // Initialize JWKS for JWT verification
+    this.jwks = createRemoteJWKSet(
+      new URL("https://www.googleapis.com/oauth2/v3/certs")
+    );
   }
 
   /**
@@ -124,31 +132,28 @@ export class GoogleOAuth {
   }
 
   /**
-   * Verify and decode Google ID token (basic verification)
+   * Verify and decode Google ID token with cryptographic signature verification
    */
   async verifyIdToken(idToken: string): Promise<GoogleUserInfo> {
-    // For production, you should use a proper JWT library or Google's verification
-    // This is a simplified implementation
-    const parts = idToken.split(".");
-    if (parts.length !== 3) {
-      throw new Error("Invalid ID token format");
-    }
-
     try {
-      const payload = JSON.parse(atob(parts[1]));
+      const { payload } = await jwtVerify(idToken, this.jwks, {
+        issuer: ["https://accounts.google.com", "accounts.google.com"],
+        audience: this.config.clientId,
+      });
 
-      // Basic validation
-      if (payload.aud !== this.config.clientId) {
-        throw new Error("Invalid audience");
-      }
-
-      if (payload.exp < Date.now() / 1000) {
-        throw new Error("Token expired");
-      }
-
-      return payload;
+      return {
+        id: payload.sub as string,
+        email: payload.email as string,
+        name: payload.name as string,
+        picture: payload.picture as string,
+        given_name: payload.given_name as string,
+        family_name: payload.family_name as string,
+      };
     } catch (error) {
-      throw new Error(`Failed to verify ID token: ${error}`);
+      if (error instanceof Error) {
+        throw new Error(`Invalid ID token: ${error.message}`);
+      }
+      throw new Error("Invalid ID token");
     }
   }
 }

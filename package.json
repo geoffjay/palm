@@ -51,6 +51,7 @@
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5",
     "ioredis": "^5.7.0",
+    "jose": "^6.1.0",
     "postgres": "^3.4.7",
     "radix-ui": "^1.4.3",
     "react": "^19",

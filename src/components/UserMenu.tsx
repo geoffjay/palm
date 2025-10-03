@@ -22,6 +22,15 @@ const ThemeButton = styled(Button)`
   align-items: middle;
 `;
 
+const DropdownMenuTrigger = styled(DropdownMenu.Trigger)`
+  margin-right: 2px;
+`;
+
+const DropdownMenuButton = styled(Button)`
+  padding-left: 4px;
+  padding-right: 4px;
+`;
+
 export function UserMenu() {
   const user = useUser();
   const logout = useLogout();
@@ -29,8 +38,8 @@ export function UserMenu() {
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        <Button variant="ghost" size="1">
+      <DropdownMenuTrigger>
+        <DropdownMenuButton variant="ghost" size="1">
           <Avatar
             src={user.picture}
             alt={user.name}
@@ -38,8 +47,8 @@ export function UserMenu() {
             fallback={user.name.charAt(0).toUpperCase()}
             radius="full"
           />
-        </Button>
-      </DropdownMenu.Trigger>
+        </DropdownMenuButton>
+      </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" sideOffset={8}>
         {/* User Info */}
