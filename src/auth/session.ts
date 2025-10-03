@@ -30,7 +30,7 @@ export class SessionManager {
   private static instance: SessionManager;
   private redis: Redis;
   private config: SessionConfig;
-  private inMemorySessions: Map<string, SessionData> = new Map();
+  private redisHealthy: boolean = false;
 
   private constructor() {
     // Initialize Redis connection using ioredis
@@ -60,15 +60,22 @@ export class SessionManager {
     // Add error handling for Redis connection
     this.redis.on("error", (error) => {
       console.error("Redis connection error:", error);
-      console.warn("⚠️  Sessions will not persist across server restarts");
+      this.redisHealthy = false;
     });
 
     this.redis.on("connect", () => {
       console.log("Redis connected successfully");
+      this.redisHealthy = true;
     });
 
     this.redis.on("ready", () => {
       console.log("Redis connection ready");
+      this.redisHealthy = true;
+    });
+
+    this.redis.on("close", () => {
+      console.warn("Redis connection closed");
+      this.redisHealthy = false;
     });
 
     this.config = {
@@ -91,6 +98,27 @@ export class SessionManager {
   }
 
   /**
+   * Ensure Redis connection is available and healthy
+   */
+  private async ensureRedisConnected(): Promise<void> {
+    try {
+      // Try to connect if not connected
+      if (this.redis.status === "wait" || this.redis.status === "end") {
+        await this.redis.connect();
+      }
+
+      // Verify connection with a ping
+      await this.redis.ping();
+      this.redisHealthy = true;
+    } catch (error) {
+      this.redisHealthy = false;
+      throw new Error(
+        "Session store unavailable - Redis connection required. Please ensure Redis is running.",
+      );
+    }
+  }
+
+  /**
    * Generate a cryptographically secure session ID
    */
   private generateSessionId(): string {
@@ -103,6 +131,9 @@ export class SessionManager {
    * Create a new session
    */
   async createSession(userData: Omit<SessionData, "createdAt" | "lastActivity">): Promise<string> {
+    // Ensure Redis is connected before creating session
+    await this.ensureRedisConnected();
+
     const sessionId = this.generateSessionId();
     const now = Date.now();
 
@@ -117,13 +148,11 @@ export class SessionManager {
     try {
       await this.redis.setex(key, this.config.ttl, JSON.stringify(sessionData));
       console.log("✅ Session saved to Redis successfully");
+      return sessionId;
     } catch (error) {
       console.error("❌ Failed to save session to Redis:", error);
-      console.warn("⚠️  Saving session in memory as fallback");
-      this.inMemorySessions.set(sessionId, sessionData);
+      throw new Error("Failed to create session - service unavailable");
     }
-
-    return sessionId;
   }
 
   /**
@@ -132,19 +161,15 @@ export class SessionManager {
   async getSession(sessionId: string): Promise<SessionData | null> {
     if (!sessionId) return null;
 
+    // Ensure Redis is connected
+    await this.ensureRedisConnected();
+
     const key = `session:${sessionId}`;
 
     try {
       const data = await this.redis.get(key);
 
       if (!data) {
-        // Fallback to in-memory sessions
-        const memorySession = this.inMemorySessions.get(sessionId);
-        if (memorySession) {
-          console.log("✅ Session found in memory fallback");
-          memorySession.lastActivity = Date.now();
-          return memorySession;
-        }
         return null;
       }
 
@@ -157,18 +182,7 @@ export class SessionManager {
       return sessionData;
     } catch (error) {
       console.error("❌ Failed to get session from Redis:", error);
-      console.warn("⚠️  Checking memory fallback");
-
-      // Fallback to in-memory sessions
-      const memorySession = this.inMemorySessions.get(sessionId);
-      if (memorySession) {
-        console.log("✅ Session found in memory fallback");
-        memorySession.lastActivity = Date.now();
-        return memorySession;
-      }
-
-      console.warn("⚠️  Session not found in memory either");
-      return null;
+      throw new Error("Failed to retrieve session - service unavailable");
     }
   }
 
@@ -176,6 +190,9 @@ export class SessionManager {
    * Update session data
    */
   async updateSession(sessionId: string, updates: Partial<SessionData>): Promise<boolean> {
+    // Ensure Redis is connected
+    await this.ensureRedisConnected();
+
     const existing = await this.getSession(sessionId);
     if (!existing) return false;
 
@@ -186,9 +203,14 @@ export class SessionManager {
     };
 
     const key = `session:${sessionId}`;
-    await this.redis.setex(key, this.config.ttl, JSON.stringify(updated));
 
-    return true;
+    try {
+      await this.redis.setex(key, this.config.ttl, JSON.stringify(updated));
+      return true;
+    } catch (error) {
+      console.error("❌ Failed to update session in Redis:", error);
+      throw new Error("Failed to update session - service unavailable");
+    }
   }
 
   /**
@@ -197,10 +219,18 @@ export class SessionManager {
   async deleteSession(sessionId: string): Promise<boolean> {
     if (!sessionId) return false;
 
-    const key = `session:${sessionId}`;
-    const result = await this.redis.del(key);
+    // Ensure Redis is connected
+    await this.ensureRedisConnected();
 
-    return result > 0;
+    const key = `session:${sessionId}`;
+
+    try {
+      const result = await this.redis.del(key);
+      return result > 0;
+    } catch (error) {
+      console.error("❌ Failed to delete session from Redis:", error);
+      throw new Error("Failed to delete session - service unavailable");
+    }
   }
 
   /**

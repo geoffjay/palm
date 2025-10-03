@@ -205,14 +205,42 @@ async createSession(userData: SessionData): Promise<string> {
 ```
 
 **Checklist**:
-- [ ] Remove `inMemorySessions` Map property
-- [ ] Add `ensureRedisConnected()` method
-- [ ] Call `ensureRedisConnected()` in all session methods
-- [ ] Remove all fallback logic to in-memory storage
-- [ ] Add health check endpoint for Redis
-- [ ] Update error responses to indicate service unavailable
-- [ ] Add monitoring/alerting for Redis failures
-- [ ] Document Redis as hard dependency
+- [x] Remove `inMemorySessions` Map property
+- [x] Add `ensureRedisConnected()` method
+- [x] Call `ensureRedisConnected()` in all session methods
+- [x] Remove all fallback logic to in-memory storage
+- [x] Add health check endpoint for Redis
+- [x] Update error responses to indicate service unavailable
+- [x] Add monitoring/alerting for Redis failures
+- [x] Document Redis as hard dependency
+
+**Status**: ✅ COMPLETED (2025-10-03)
+**Implementation**:
+- Removed `inMemorySessions` Map property from SessionManager
+- Added `redisHealthy` boolean flag to track connection state
+- Implemented `ensureRedisConnected()` method with ping verification (lines 103-119)
+- Updated all session methods to call `ensureRedisConnected()` before operations:
+  - `createSession()` - fails fast if Redis unavailable (lines 133-156)
+  - `getSession()` - throws error instead of falling back (lines 161-187)
+  - `updateSession()` - fails fast (lines 192-214)
+  - `deleteSession()` - fails fast (lines 219-234)
+- Removed all in-memory fallback logic from try-catch blocks
+- Added Redis event listeners for `error`, `connect`, `ready`, `close` events
+- Updated error messages to clearly indicate "service unavailable"
+- Enhanced `tests/auth/session.test.ts` with 5 fail-fast tests:
+  - Test createSession throws on Redis failure
+  - Test getSession throws on Redis failure
+  - Test updateSession throws on Redis failure
+  - Test deleteSession throws on Redis failure
+  - Test no in-memory fallback when Redis fails
+- All 10 session tests passing ✅
+
+**Benefits**:
+- Sessions now consistent across multiple server instances
+- No session loss on server restart (requires Redis persistence)
+- Clear error visibility when session store is unavailable
+- Eliminates memory leak potential
+- Forces proper infrastructure setup (Redis required)
 
 ---
 
@@ -735,7 +763,7 @@ Before deploying to production:
 ### Week 1 Status
 - [x] Task 1: JWT Verification (4h) ✅ COMPLETED
 - [x] Task 2: CSRF Validation (3h) ✅ COMPLETED
-- [ ] Task 3: Session Management (2h)
+- [x] Task 3: Session Management (2h) ✅ COMPLETED
 - [ ] Task 4: Input Validation (6h)
 - [ ] Task 5: Token Encryption (5h)
 - [ ] Task 6: Rate Limiting (4h)

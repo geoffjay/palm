@@ -3,6 +3,7 @@ import { testUtils } from "../setup";
 
 // Mock Redis
 const mockRedis = {
+  status: "ready",
   set: mock(async () => "OK"),
   setex: mock(async () => "OK"),
   get: mock(async (key: string) => {
@@ -14,7 +15,10 @@ const mockRedis = {
   del: mock(async () => 1),
   exists: mock(async () => 1),
   expire: mock(async () => 1),
+  ping: mock(async () => "PONG"),
+  connect: mock(async () => {}),
   disconnect: mock(async () => {}),
+  on: mock(() => mockRedis),
 };
 
 // Mock Redis constructor
@@ -27,6 +31,7 @@ describe("SessionManager", () => {
 
   beforeEach(async () => {
     // Reset ALL mock functions to ensure clean state
+    mockRedis.status = "ready";
     mockRedis.set = mock(async () => "OK");
     mockRedis.setex = mock(async () => "OK");
     mockRedis.get = mock(async (key: string) => {
@@ -38,7 +43,10 @@ describe("SessionManager", () => {
     mockRedis.del = mock(async () => 1);
     mockRedis.exists = mock(async () => 1);
     mockRedis.expire = mock(async () => 1);
+    mockRedis.ping = mock(async () => "PONG");
+    mockRedis.connect = mock(async () => {});
     mockRedis.disconnect = mock(async () => {});
+    mockRedis.on = mock(() => mockRedis);
 
     // Clear module cache to ensure fresh import
     delete require.cache[require.resolve("../../src/auth/session")];
@@ -113,5 +121,99 @@ describe("SessionManager", () => {
     const sessionId = sessionManager.extractSessionId(mockRequest);
 
     expect(sessionId).toBeNull();
+  });
+
+  describe("Fail-fast behavior - Redis unavailable", () => {
+    test("createSession - should throw error when Redis is unavailable", async () => {
+      mockRedis.ping = mock(async () => {
+        throw new Error("Connection refused");
+      });
+
+      const sessionManager = new SessionManager() as any;
+
+      try {
+        await sessionManager.createSession({
+          userId: "test_user",
+          email: "test@example.com",
+          name: "Test User",
+          picture: "https://example.com/pic.jpg",
+        });
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Session store unavailable");
+      }
+    });
+
+    test("getSession - should throw error when Redis is unavailable", async () => {
+      mockRedis.ping = mock(async () => {
+        throw new Error("Connection refused");
+      });
+
+      const sessionManager = new SessionManager() as any;
+
+      try {
+        await sessionManager.getSession("test_session_id");
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Session store unavailable");
+      }
+    });
+
+    test("updateSession - should throw error when Redis is unavailable", async () => {
+      mockRedis.ping = mock(async () => {
+        throw new Error("Connection refused");
+      });
+
+      const sessionManager = new SessionManager() as any;
+
+      try {
+        await sessionManager.updateSession("test_session_id", {
+          lastActivity: Date.now(),
+        });
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Session store unavailable");
+      }
+    });
+
+    test("deleteSession - should throw error when Redis is unavailable", async () => {
+      mockRedis.ping = mock(async () => {
+        throw new Error("Connection refused");
+      });
+
+      const sessionManager = new SessionManager() as any;
+
+      try {
+        await sessionManager.deleteSession("test_session_id");
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Session store unavailable");
+      }
+    });
+
+    test("should not use in-memory fallback when Redis fails", async () => {
+      mockRedis.setex = mock(async () => {
+        throw new Error("Redis write failed");
+      });
+
+      const sessionManager = new SessionManager() as any;
+
+      try {
+        await sessionManager.createSession({
+          userId: "test_user",
+          email: "test@example.com",
+          name: "Test User",
+          picture: "https://example.com/pic.jpg",
+        });
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("service unavailable");
+      }
+    });
   });
 });
