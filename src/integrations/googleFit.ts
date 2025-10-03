@@ -2,6 +2,7 @@
  * Google Fit API Integration
  */
 
+import { logger } from "../utils/logger";
 import type { BiometricDataPoint, DataSourceConnection, DataSourceIntegration, DataSyncResult } from "./types";
 
 interface GoogleFitTokenResponse {
@@ -36,12 +37,10 @@ export class GoogleFitIntegration implements DataSourceIntegration {
     this.clientSecret = process.env.GOOGLE_CLIENT_SECRET!;
     this.redirectUri = `${process.env.BASE_URL || "http://localhost:3000"}/api/integrations/google_fit/callback`;
 
-    // Debug logging (remove in production)
-    console.log("GoogleFit Integration initialized:", {
+    logger.debug("GoogleFit Integration initialized", {
       hasClientId: !!this.clientId,
       hasClientSecret: !!this.clientSecret,
       redirectUri: this.redirectUri,
-      clientIdPrefix: this.clientId?.substring(0, 10) + "...",
     });
   }
 
@@ -116,7 +115,7 @@ export class GoogleFitIntegration implements DataSourceIntegration {
           const typeData = await this.fetchDataType(validConnection, dataType, startTime, endTime);
           dataPoints.push(...typeData);
         } catch (error) {
-          console.error(`Failed to fetch ${dataType}:`, error);
+          logger.error(`Failed to fetch Google Fit ${dataType}`, error);
         }
       }
 
@@ -125,7 +124,7 @@ export class GoogleFitIntegration implements DataSourceIntegration {
         dataPoints,
       };
     } catch (error) {
-      console.error("Google Fit sync error:", error);
+      logger.error("Google Fit sync failed", error);
       return {
         success: false,
         dataPoints: [],
@@ -144,7 +143,7 @@ export class GoogleFitIntegration implements DataSourceIntegration {
         method: "POST",
       });
     } catch (error) {
-      console.error("Failed to revoke Google Fit token:", error);
+      logger.error("Failed to revoke Google Fit token", error);
     }
   }
 
@@ -186,7 +185,7 @@ export class GoogleFitIntegration implements DataSourceIntegration {
    * Exchange authorization code for access tokens
    */
   private async exchangeCodeForTokens(code: string): Promise<GoogleFitTokenResponse> {
-    console.log("🔄 Attempting token exchange with code:", code.substring(0, 20) + "...");
+    logger.debug("Attempting Google Fit token exchange");
 
     const response = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -204,18 +203,13 @@ export class GoogleFitIntegration implements DataSourceIntegration {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Google token exchange error:", {
+      logger.error("Google token exchange failed", null, {
         status: response.status,
         statusText: response.statusText,
-        body: errorText,
-        requestBody: {
-          client_id: this.clientId,
-          redirect_uri: this.redirectUri,
-          grant_type: "authorization_code",
-          // Don't log the actual code or secret for security
-        },
+        errorBody: errorText,
+        redirectUri: this.redirectUri,
       });
-      throw new Error(`Token exchange failed: ${response.statusText} - ${errorText}`);
+      throw new Error(`Token exchange failed: ${response.statusText}`);
     }
 
     return response.json();
@@ -241,11 +235,10 @@ export class GoogleFitIntegration implements DataSourceIntegration {
     startTime: Date,
     endTime: Date,
   ): Promise<BiometricDataPoint[]> {
-    console.log(`🔄 Fetching Google Fit data for ${dataType}`, {
+    logger.debug(`Fetching Google Fit data for ${dataType}`, {
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
       hasToken: !!connection.accessToken,
-      tokenPrefix: connection.accessToken?.substring(0, 20) + "...",
     });
 
     const response = await fetch(`https://www.googleapis.com/fitness/v1/users/me/dataset:aggregate`, {
@@ -264,13 +257,12 @@ export class GoogleFitIntegration implements DataSourceIntegration {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Google Fit API error for ${dataType}:`, {
+      logger.error(`Google Fit API error for ${dataType}`, null, {
         status: response.status,
         statusText: response.statusText,
-        body: errorText,
-        headers: Object.fromEntries(response.headers.entries()),
+        errorBody: errorText,
       });
-      throw new Error(`Failed to fetch ${dataType}: ${response.statusText} - ${errorText}`);
+      throw new Error(`Failed to fetch ${dataType}: ${response.statusText}`);
     }
 
     const data = await response.json();

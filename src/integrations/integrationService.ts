@@ -7,6 +7,7 @@ import { db } from "../../db";
 import type { DataSourceConnection, NewDataSourceConnection } from "../../db/schema";
 import { dataSourceConnections, users } from "../../db/schema";
 import { encrypt, decrypt } from "../utils/encryption";
+import { logger } from "../utils/logger";
 import { GoogleFitIntegration } from "./googleFit";
 import type { BiometricDataPoint, DataSourceIntegration } from "./types";
 
@@ -164,7 +165,7 @@ export class IntegrationService {
         const dataPoints = await this.syncConnection(connection.id, since);
         allDataPoints.push(...dataPoints);
       } catch (error) {
-        console.error(`Failed to sync connection ${connection.id}:`, error);
+        logger.error(`Failed to sync connection ${connection.id}:`, error);
       }
     }
 
@@ -190,7 +191,7 @@ export class IntegrationService {
       try {
         await integration.disconnect(connection[0]);
       } catch (error) {
-        console.error("Failed to disconnect from provider:", error);
+        logger.error("Failed to disconnect from provider:", error);
       }
     }
 
@@ -211,7 +212,7 @@ export class IntegrationService {
         // Map external data types to our measurement types
         const measurementType = this.mapDataTypeToMeasurementType(point.type);
         if (!measurementType) {
-          console.warn(`Unknown data type: ${point.type}`);
+          logger.warn(`Unknown data type: ${point.type}`);
           continue;
         }
 
@@ -226,7 +227,7 @@ export class IntegrationService {
 
         if (exists) {
           skippedCount++;
-          console.log(`Skipping duplicate measurement: ${measurementType} = ${point.value} at ${point.timestamp}`);
+          logger.info(`Skipping duplicate measurement: ${measurementType} = ${point.value} at ${point.timestamp}`);
           continue;
         }
 
@@ -240,11 +241,11 @@ export class IntegrationService {
         );
         savedCount++;
       } catch (error) {
-        console.error(`Failed to save biometric data point:`, error);
+        logger.error(`Failed to save biometric data point:`, error);
       }
     }
 
-    console.log(`Sync completed: ${savedCount} new measurements saved, ${skippedCount} duplicates skipped`);
+    logger.info(`Sync completed: ${savedCount} new measurements saved, ${skippedCount} duplicates skipped`);
   }
 
   /**

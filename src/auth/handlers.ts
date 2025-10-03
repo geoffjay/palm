@@ -3,6 +3,7 @@
  */
 
 import { userService } from "../../db/services";
+import { logger } from "../utils/logger";
 import type { AuthenticatedRequest } from "./middleware";
 import { GoogleOAuth } from "./oauth";
 import { SessionManager } from "./session";
@@ -42,7 +43,7 @@ export class OAuthHandlers {
 
       return Response.redirect(authUrl, 302);
     } catch (error) {
-      console.error("Failed to initiate Google auth:", error);
+      logger.error("Failed to initiate Google auth", error);
 
       return new Response(
         JSON.stringify({
@@ -63,28 +64,32 @@ export class OAuthHandlers {
    */
   async handleGoogleCallback(req: Request): Promise<Response> {
     try {
-      console.log("🔐 OAuth callback started");
+      logger.debug("OAuth callback started");
       const url = new URL(req.url);
       const code = url.searchParams.get("code");
       const state = url.searchParams.get("state");
       const error = url.searchParams.get("error");
 
-      console.log("🔐 OAuth params - code:", !!code, "state:", !!state, "error:", error);
+      logger.debug("OAuth callback params received", {
+        hasCode: !!code,
+        hasState: !!state,
+        hasError: !!error,
+      });
 
       // Check for OAuth errors
       if (error) {
-        console.error("🔐 OAuth error:", error);
+        logger.warn("OAuth error received", { error });
         return this.redirectWithError("OAuth authentication was cancelled or failed");
       }
 
       if (!code) {
-        console.error("🔐 No authorization code received");
+        logger.error("No authorization code received in OAuth callback");
         return this.redirectWithError("No authorization code received");
       }
 
       // Validate state parameter for CSRF protection
       if (!state) {
-        console.error("🔐 Missing state parameter");
+        logger.error("Missing state parameter in OAuth callback - possible CSRF attack");
         return this.redirectWithError("Missing state parameter - possible CSRF attack");
       }
 
@@ -92,36 +97,36 @@ export class OAuthHandlers {
       const storedStateData = await redis.get(`oauth:state:${state}`);
 
       if (!storedStateData) {
-        console.error("🔐 Invalid or expired state parameter");
+        logger.error("Invalid or expired state parameter - possible CSRF attack");
         return this.redirectWithError("Invalid or expired state parameter - possible CSRF attack");
       }
 
       // Delete state to prevent replay attacks
       await redis.del(`oauth:state:${state}`);
 
-      console.log("🔐 State validated successfully");
+      logger.debug("OAuth state validated successfully");
 
-      console.log("🔐 Exchanging code for tokens...");
+      logger.debug("Exchanging authorization code for tokens");
       // Exchange code for tokens
       const tokens = await this.oauth.exchangeCodeForTokens(code);
-      console.log("🔐 Tokens received:", !!tokens.access_token);
+      logger.debug("OAuth tokens received");
 
-      console.log("🔐 Getting user info...");
+      logger.debug("Fetching user info from Google");
       // Get user information
       const userInfo = await this.oauth.getUserInfo(tokens.access_token);
-      console.log("🔐 User info received:", userInfo.email);
+      logger.info("User authenticated via OAuth", { email: userInfo.email, userId: userInfo.id });
 
-      console.log("🔐 Verifying ID token...");
+      logger.debug("Verifying ID token");
       // Verify ID token
       const _idTokenPayload = await this.oauth.verifyIdToken(tokens.id_token);
-      console.log("🔐 ID token verified");
+      logger.debug("ID token verified successfully");
 
-      console.log("🔐 Creating/updating user...");
+      logger.debug("Creating or updating user in database");
       // Create or update user in database
       await this.createOrUpdateUser(userInfo);
-      console.log("🔐 User created/updated");
+      logger.debug("User record updated");
 
-      console.log("🔐 Creating session...");
+      logger.debug("Creating session");
       // Create user session
       const sessionId = await this.sessionManager.createSession({
         userId: userInfo.id,
@@ -131,7 +136,7 @@ export class OAuthHandlers {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
       });
-      console.log("🔐 Session created:", !!sessionId);
+      logger.info("Session created for user", { userId: userInfo.id });
 
       // Create session cookie
       const sessionCookie = this.sessionManager.createSessionCookie(sessionId);
@@ -147,10 +152,9 @@ export class OAuthHandlers {
         },
       });
     } catch (error) {
-      console.error("🔐 OAuth callback error:", error);
-      console.error("🔐 Error details:", {
-        message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
+      logger.error("OAuth callback failed", error, {
+        hasError: !!error,
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
       });
       return this.redirectWithError("Authentication failed");
     }
@@ -184,7 +188,7 @@ export class OAuthHandlers {
         },
       );
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout failed", error);
 
       return new Response(
         JSON.stringify({
@@ -237,7 +241,7 @@ export class OAuthHandlers {
         },
       );
     } catch (error) {
-      console.error("Get current user error:", error);
+      logger.error("Failed to get current user", error);
 
       return new Response(
         JSON.stringify({
@@ -305,7 +309,7 @@ export class OAuthHandlers {
         },
       );
     } catch (error) {
-      console.error("Session refresh error:", error);
+      logger.error("Session refresh failed", error);
 
       return new Response(
         JSON.stringify({
@@ -340,7 +344,7 @@ export class OAuthHandlers {
         picture: userInfo.picture,
       });
     } catch (error) {
-      console.error("Failed to create/update user in database:", error);
+      logger.error("Failed to create/update user in database", error);
       // Don't throw error to avoid breaking OAuth flow
     }
   }
