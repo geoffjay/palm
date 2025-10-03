@@ -3,6 +3,8 @@ import { serve } from "bun";
 import { OAuthHandlers } from "./auth/handlers";
 import type { AuthenticatedRequest } from "./auth/middleware";
 import { AuthMiddleware } from "./auth/middleware";
+import { validateBody, handleValidationError } from "./middleware/validation";
+import { createMeasurementSchema } from "./validation/schemas";
 import index from "./index.html";
 
 // Initialize authentication components
@@ -184,8 +186,9 @@ const server = serve({
       POST: authMiddleware.requireAuth(async (req: AuthenticatedRequest) => {
         const { biometricService, userService } = await import("../db/services");
         try {
-          const body = await req.json();
-          const { typeName, value, systolic, diastolic, measuredAt, notes } = body;
+          // Validate request body
+          const validatedData = await validateBody(createMeasurementSchema)(req);
+          const { typeName, value, systolic, diastolic, measuredAt, notes } = validatedData;
 
           // Get database user ID from Google ID
           const dbUser = await userService.findByGoogleId(req.user.userId);
@@ -193,13 +196,13 @@ const server = serve({
             return Response.json({ error: "User not found" }, { status: 404 });
           }
 
-          const measurementDate = measuredAt ? new Date(measuredAt) : new Date();
+          const measurementDate = measuredAt || new Date();
 
-          if (typeName === "blood_pressure" && systolic && diastolic) {
-            // Blood pressure measurement
+          if (typeName === "blood_pressure" && systolic !== undefined && diastolic !== undefined) {
+            // Blood pressure measurement (values already validated and converted by Zod)
             const measurements = await biometricService.recordBloodPressure(dbUser.id, {
-              systolic: parseFloat(systolic),
-              diastolic: parseFloat(diastolic),
+              systolic,
+              diastolic,
               measuredAt: measurementDate,
               notes: notes || undefined,
             });
@@ -226,6 +229,10 @@ const server = serve({
             return Response.json({ error: "Invalid measurement data" }, { status: 400 });
           }
         } catch (error) {
+          // Handle validation errors
+          if (error instanceof Error && error.name === "ValidationError") {
+            return handleValidationError(error);
+          }
           console.error("Error adding measurement:", error);
           return Response.json(
             { error: error instanceof Error ? error.message : "Failed to add measurement" },
