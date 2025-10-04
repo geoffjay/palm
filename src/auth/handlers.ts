@@ -37,8 +37,12 @@ export class OAuthHandlers {
 
       // Ensure Redis is connected before using
       if (redis.status === "wait" || redis.status === "end") {
+        logger.debug("Redis not connected, attempting connection");
         await redis.connect();
       }
+
+      // Verify connection with ping
+      await redis.ping();
 
       await redis.setex(
         `oauth:state:${state}`,
@@ -50,12 +54,17 @@ export class OAuthHandlers {
 
       return Response.redirect(authUrl, 302);
     } catch (error) {
-      logger.error("Failed to initiate Google auth", error);
+      logger.error("Failed to initiate Google auth", error, {
+        errorMessage: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        redisStatus: this.sessionManager.getRedisClient().status,
+      });
 
       return new Response(
         JSON.stringify({
           error: "Authentication failed",
           message: "Failed to initiate Google authentication",
+          details: error instanceof Error ? error.message : String(error),
         }),
         {
           status: 500,
