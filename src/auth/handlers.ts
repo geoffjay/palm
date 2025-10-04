@@ -126,8 +126,15 @@ export class OAuthHandlers {
       await this.createOrUpdateUser(userInfo);
       logger.debug("User record updated");
 
-      logger.debug("Creating session");
-      // Create user session
+      // Session fixation protection: Delete any existing session before creating new one
+      const oldSessionId = this.sessionManager.extractSessionId(req);
+      if (oldSessionId) {
+        logger.debug("Deleting old session for security (session fixation protection)");
+        await this.sessionManager.deleteSession(oldSessionId);
+      }
+
+      logger.debug("Creating new authenticated session");
+      // Create new user session with fresh session ID
       const sessionId = await this.sessionManager.createSession({
         userId: userInfo.id,
         email: userInfo.email,
@@ -136,7 +143,7 @@ export class OAuthHandlers {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token,
       });
-      logger.info("Session created for user", { userId: userInfo.id });
+      logger.info("New session created for authenticated user", { userId: userInfo.id });
 
       // Create session cookie
       const sessionCookie = this.sessionManager.createSessionCookie(sessionId);
