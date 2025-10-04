@@ -50,14 +50,19 @@ export class SessionManager {
       console.log("🔧 Creating Redis connection with URL and TLS");
       this.redis = new Redis(redisUrl, {
         family: 0, // Allow both IPv4 and IPv6
-        connectTimeout: 10000,
-        lazyConnect: true,
+        connectTimeout: 5000,
+        lazyConnect: false, // Connect immediately at startup
         maxRetriesPerRequest: 3,
         enableAutoPipelining: true,
+        enableReadyCheck: true,
         tls: needsTLS ? {
           rejectUnauthorized: true,
         } : undefined,
         retryStrategy(times) {
+          if (times > 10) {
+            console.error(`🔧 Redis retry limit reached after ${times} attempts`);
+            return null; // Stop retrying
+          }
           const delay = Math.min(times * 50, 2000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
           return delay;
@@ -77,10 +82,15 @@ export class SessionManager {
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_DB || "0", 10),
         family: 0,
-        connectTimeout: 10000,
-        lazyConnect: true,
+        connectTimeout: 5000,
+        lazyConnect: false, // Connect immediately at startup
         maxRetriesPerRequest: 3,
+        enableReadyCheck: true,
         retryStrategy(times) {
+          if (times > 10) {
+            console.error(`🔧 Redis retry limit reached after ${times} attempts`);
+            return null;
+          }
           const delay = Math.min(times * 50, 2000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
           return delay;
