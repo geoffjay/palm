@@ -35,15 +35,28 @@ export class SessionManager {
   private constructor() {
     // Initialize Redis connection using ioredis
     // Support both REDIS_URL (production) and individual environment variables (development)
+    console.log("🔧 SessionManager constructor called");
     console.log("🔧 Redis config - REDIS_URL exists:", !!process.env.REDIS_URL);
+    console.log("🔧 Redis config - REDIS_URL length:", process.env.REDIS_URL?.length || 0);
 
     if (process.env.REDIS_URL) {
-      console.log("🔧 Redis URL:", process.env.REDIS_URL.replace(/:[^:@]+@/, ':***@')); // Hide password
-      console.log("🔧 Creating Redis connection with URL");
-      this.redis = new Redis(process.env.REDIS_URL, {
+      const redisUrl = process.env.REDIS_URL;
+      console.log("🔧 Redis URL (masked):", redisUrl.replace(/:[^:@]+@/, ':***@'));
+
+      // Parse URL to check if it needs TLS
+      const needsTLS = redisUrl.includes('upstash.io') || redisUrl.startsWith('rediss://');
+      console.log("🔧 TLS required:", needsTLS);
+
+      console.log("🔧 Creating Redis connection with URL and TLS");
+      this.redis = new Redis(redisUrl, {
+        family: 0, // Allow both IPv4 and IPv6
         connectTimeout: 10000,
         lazyConnect: true,
         maxRetriesPerRequest: 3,
+        enableAutoPipelining: true,
+        tls: needsTLS ? {
+          rejectUnauthorized: true,
+        } : undefined,
         retryStrategy(times) {
           const delay = Math.min(times * 50, 2000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
@@ -63,6 +76,7 @@ export class SessionManager {
         port: parseInt(process.env.REDIS_PORT || "6379", 10),
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_DB || "0", 10),
+        family: 0,
         connectTimeout: 10000,
         lazyConnect: true,
         maxRetriesPerRequest: 3,
@@ -73,6 +87,8 @@ export class SessionManager {
         },
       });
     }
+
+    console.log("🔧 Redis client created, status:", this.redis.status);
 
     // Add error handling for Redis connection
     this.redis.on("error", (error) => {
