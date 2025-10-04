@@ -23,6 +23,8 @@ export class OAuthHandlers {
    */
   async initiateGoogleAuth(_req: Request): Promise<Response> {
     try {
+      logger.debug("Starting OAuth initiation");
+
       // Generate cryptographically secure state parameter for CSRF protection
       const state = crypto.randomUUID();
       const nonce = crypto.randomUUID();
@@ -34,23 +36,47 @@ export class OAuthHandlers {
       };
 
       const redis = this.sessionManager.getRedisClient();
+      logger.debug("Got Redis client", { status: redis.status });
 
       // Ensure Redis is connected before using
       if (redis.status === "wait" || redis.status === "end") {
         logger.debug("Redis not connected, attempting connection");
-        await redis.connect();
+        try {
+          await redis.connect();
+          logger.debug("Redis connect() completed", { status: redis.status });
+        } catch (connectError) {
+          logger.error("Redis connect() failed", connectError, {
+            errorMessage: connectError instanceof Error ? connectError.message : String(connectError),
+            errorStack: connectError instanceof Error ? connectError.stack : undefined,
+          });
+          throw connectError;
+        }
       }
 
       // Verify connection with ping
-      await redis.ping();
+      logger.debug("Attempting Redis ping");
+      try {
+        await redis.ping();
+        logger.debug("Redis ping successful");
+      } catch (pingError) {
+        logger.error("Redis ping failed", pingError, {
+          errorMessage: pingError instanceof Error ? pingError.message : String(pingError),
+          errorStack: pingError instanceof Error ? pingError.stack : undefined,
+          redisStatus: redis.status,
+        });
+        throw pingError;
+      }
 
+      logger.debug("Storing state in Redis");
       await redis.setex(
         `oauth:state:${state}`,
         600, // 10 minutes
         JSON.stringify(stateData),
       );
+      logger.debug("State stored successfully");
 
       const authUrl = this.oauth.getAuthorizationUrl(state);
+      logger.debug("Redirecting to Google OAuth", { authUrl });
 
       return Response.redirect(authUrl, 302);
     } catch (error) {

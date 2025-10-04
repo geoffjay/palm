@@ -36,17 +36,28 @@ export class SessionManager {
     // Initialize Redis connection using ioredis
     // Support both REDIS_URL (production) and individual environment variables (development)
     console.log("🔧 Redis config - REDIS_URL exists:", !!process.env.REDIS_URL);
-    console.log("🔧 Redis config - Using URL:", process.env.REDIS_URL ? "YES" : "NO");
 
     if (process.env.REDIS_URL) {
+      console.log("🔧 Redis URL:", process.env.REDIS_URL.replace(/:[^:@]+@/, ':***@')); // Hide password
       console.log("🔧 Creating Redis connection with URL");
       this.redis = new Redis(process.env.REDIS_URL, {
         connectTimeout: 10000,
         lazyConnect: true,
-        maxRetriesPerRequest: 1,
+        maxRetriesPerRequest: 3,
+        retryStrategy(times) {
+          const delay = Math.min(times * 50, 2000);
+          console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
+          return delay;
+        },
+        reconnectOnError(err) {
+          console.error("🔧 Redis reconnect on error:", err.message);
+          return true;
+        },
       });
     } else {
       console.log("🔧 Creating Redis connection with individual vars");
+      console.log("🔧 Redis host:", process.env.REDIS_HOST || "localhost");
+      console.log("🔧 Redis port:", process.env.REDIS_PORT || "6379");
       this.redis = new Redis({
         host: process.env.REDIS_HOST || "localhost",
         port: parseInt(process.env.REDIS_PORT || "6379", 10),
@@ -54,6 +65,12 @@ export class SessionManager {
         db: parseInt(process.env.REDIS_DB || "0", 10),
         connectTimeout: 10000,
         lazyConnect: true,
+        maxRetriesPerRequest: 3,
+        retryStrategy(times) {
+          const delay = Math.min(times * 50, 2000);
+          console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
+          return delay;
+        },
       });
     }
 
