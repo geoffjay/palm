@@ -33,7 +33,14 @@ export class OAuthHandlers {
         createdAt: Date.now(),
       };
 
-      await this.sessionManager.getRedisClient().setex(
+      const redis = this.sessionManager.getRedisClient();
+
+      // Ensure Redis is connected before using
+      if (redis.status === "wait" || redis.status === "end") {
+        await redis.connect();
+      }
+
+      await redis.setex(
         `oauth:state:${state}`,
         600, // 10 minutes
         JSON.stringify(stateData),
