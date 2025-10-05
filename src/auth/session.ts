@@ -50,7 +50,6 @@ export class SessionManager {
         family: 6, // Force IPv6 for fly.io internal network
         maxRetriesPerRequest: null,
         enableReadyCheck: false, // Disable ready check for fly.io
-        lazyConnect: false,
         connectTimeout: 10000,
         keepAlive: 30000,
         retryStrategy(times) {
