@@ -7,19 +7,21 @@ primary_region = 'sea'
 [env]
   # Redis doesn't need special env vars for basic operation
 
-[[services]]
-  protocol = 'tcp'
+# Internal service - no public ports needed
+[services]
   internal_port = 6379
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
 
   [[services.ports]]
     port = 6379
-    handlers = []
 
-  # Health checks
+  # Health check to ensure Redis is responsive
   [[services.tcp_checks]]
-    interval = '15s'
-    timeout = '10s'
-    grace_period = '30s'
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "30s"
 
 # Mount for Redis data persistence
 [[mounts]]

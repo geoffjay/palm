@@ -48,17 +48,17 @@ export class SessionManager {
 
       this.redis = new Redis(redisUrl, {
         family: 0, // Allow both IPv4 and IPv6
-        connectTimeout: 5000,
-        lazyConnect: false, // Connect immediately at startup
-        maxRetriesPerRequest: 3,
+        connectTimeout: 10000,
+        lazyConnect: true, // Connect on first use
+        maxRetriesPerRequest: 5,
         enableAutoPipelining: true,
         enableReadyCheck: true,
         retryStrategy(times) {
-          if (times > 10) {
+          if (times > 20) {
             console.error(`🔧 Redis retry limit reached after ${times} attempts`);
             return null; // Stop retrying
           }
-          const delay = Math.min(times * 50, 2000);
+          const delay = Math.min(times * 100, 3000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
           return delay;
         },
