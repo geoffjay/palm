@@ -5,10 +5,10 @@ primary_region = 'sea'
   dockerfile = 'Dockerfile'
 
 [env]
-  # Redis doesn't need special env vars for basic operation
+  # REDIS_PASSWORD set via fly secrets
 
-# Internal service - no public ports needed
-[services]
+# Public service with TLS
+[[services]]
   internal_port = 6379
   protocol = "tcp"
   auto_stop_machines = false
@@ -16,8 +16,9 @@ primary_region = 'sea'
 
   [[services.ports]]
     port = 6379
+    handlers = []
 
-  # Health check to ensure Redis is responsive
+  # Health check
   [[services.tcp_checks]]
     interval = "15s"
     timeout = "10s"

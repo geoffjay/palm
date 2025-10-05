@@ -43,15 +43,18 @@ export class SessionManager {
       const redisUrl = process.env.REDIS_URL;
       console.log("🔧 Redis URL (masked):", redisUrl.replace(/:[^:@]+@/, ':***@'));
 
-      // Internal fly.io Redis - no TLS needed on private network
-      console.log("🔧 Using internal fly.io Redis (no TLS)");
+      // Check if TLS is required (rediss:// protocol)
+      const needsTLS = redisUrl.startsWith('rediss://');
+      console.log("🔧 TLS enabled:", needsTLS);
 
       this.redis = new Redis(redisUrl, {
-        family: 6, // Force IPv6 for fly.io internal network
         maxRetriesPerRequest: null,
-        enableReadyCheck: false, // Disable ready check for fly.io
+        enableReadyCheck: false,
         connectTimeout: 10000,
         keepAlive: 30000,
+        tls: needsTLS ? {
+          rejectUnauthorized: false, // Accept self-signed certificates
+        } : undefined,
         retryStrategy(times) {
           const delay = Math.min(times * 100, 5000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
