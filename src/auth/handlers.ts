@@ -35,6 +35,9 @@ export class OAuthHandlers {
         createdAt: Date.now(),
       };
 
+      // Ensure Redis is connected before using
+      await this.sessionManager.ensureRedisConnected();
+
       const redis = this.sessionManager.getRedisClient();
       logger.debug("Got Redis client", { status: redis.status });
 

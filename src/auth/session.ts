@@ -132,17 +132,24 @@ export class SessionManager {
   /**
    * Ensure Redis connection is available and healthy
    */
-  private async ensureRedisConnected(): Promise<void> {
+  async ensureRedisConnected(): Promise<void> {
     try {
+      console.log("🔧 ensureRedisConnected - Redis status:", this.redis.status);
+
       // Try to connect if not connected
-      if (this.redis.status === "wait" || this.redis.status === "end") {
+      if (this.redis.status === "wait" || this.redis.status === "end" || this.redis.status === "close") {
+        console.log("🔧 Connecting to Redis...");
         await this.redis.connect();
+        console.log("🔧 Redis connected, status:", this.redis.status);
       }
 
       // Verify connection with a ping
-      await this.redis.ping();
+      console.log("🔧 Pinging Redis...");
+      const pong = await this.redis.ping();
+      console.log("🔧 Redis ping response:", pong);
       this.redisHealthy = true;
     } catch (error) {
+      console.error("🔧 ensureRedisConnected failed:", error);
       this.redisHealthy = false;
       throw new Error(
         "Session store unavailable - Redis connection required. Please ensure Redis is running.",
