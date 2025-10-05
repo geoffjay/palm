@@ -47,31 +47,16 @@ export class SessionManager {
       console.log("🔧 Using internal fly.io Redis (no TLS)");
 
       this.redis = new Redis(redisUrl, {
-        family: 0, // Allow both IPv4 and IPv6
+        family: 6, // Force IPv6 for fly.io internal network
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false, // Disable ready check for fly.io
+        lazyConnect: false,
         connectTimeout: 10000,
-        lazyConnect: false, // Connect immediately
-        maxRetriesPerRequest: null, // Unlimited retries per request
-        enableAutoPipelining: false, // Disable pipelining to avoid connection issues
-        enableReadyCheck: true,
-        keepAlive: 30000, // Keep connection alive
+        keepAlive: 30000,
         retryStrategy(times) {
-          // Retry indefinitely with exponential backoff
           const delay = Math.min(times * 100, 5000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
           return delay;
-        },
-        reconnectOnError(err) {
-          console.error("🔧 Redis reconnect on error:", err.message);
-          const reconnectErrors = [
-            'READONLY',
-            'ECONNRESET',
-            'ENOTFOUND',
-            'ETIMEDOUT',
-          ];
-          if (reconnectErrors.some(e => err.message.includes(e))) {
-            return 1; // Reconnect after 1ms
-          }
-          return true;
         },
       });
     } else {
@@ -83,11 +68,11 @@ export class SessionManager {
         port: parseInt(process.env.REDIS_PORT || "6379", 10),
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_DB || "0", 10),
-        family: 0,
+        family: 0, // Allow both IPv4 and IPv6 for local development
         connectTimeout: 5000,
-        lazyConnect: false, // Connect immediately at startup
-        maxRetriesPerRequest: 3,
-        enableReadyCheck: true,
+        lazyConnect: false,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
         retryStrategy(times) {
           if (times > 10) {
             console.error(`🔧 Redis retry limit reached after ${times} attempts`);
