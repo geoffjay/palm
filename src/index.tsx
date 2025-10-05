@@ -33,9 +33,8 @@ const server = serve({
     // Authentication routes with rate limiting (must come before catch-all)
     "/auth/google": {
       GET: withSecurity(async (req: Request) => {
-        // Temporarily disable rate limiting for debugging
-        // const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
-        // if (rateLimitResponse) return rateLimitResponse;
+        const rateLimitResponse = await rateLimitMiddleware(authRateLimit)(req);
+        if (rateLimitResponse) return rateLimitResponse;
         return oauthHandlers.initiateGoogleAuth(req);
       }),
     },
