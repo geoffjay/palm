@@ -49,21 +49,28 @@ export class SessionManager {
       this.redis = new Redis(redisUrl, {
         family: 0, // Allow both IPv4 and IPv6
         connectTimeout: 10000,
-        lazyConnect: true, // Connect on first use
-        maxRetriesPerRequest: 5,
-        enableAutoPipelining: true,
+        lazyConnect: false, // Connect immediately
+        maxRetriesPerRequest: null, // Unlimited retries per request
+        enableAutoPipelining: false, // Disable pipelining to avoid connection issues
         enableReadyCheck: true,
+        keepAlive: 30000, // Keep connection alive
         retryStrategy(times) {
-          if (times > 20) {
-            console.error(`🔧 Redis retry limit reached after ${times} attempts`);
-            return null; // Stop retrying
-          }
-          const delay = Math.min(times * 100, 3000);
+          // Retry indefinitely with exponential backoff
+          const delay = Math.min(times * 100, 5000);
           console.log(`🔧 Redis retry attempt ${times}, delay ${delay}ms`);
           return delay;
         },
         reconnectOnError(err) {
           console.error("🔧 Redis reconnect on error:", err.message);
+          const reconnectErrors = [
+            'READONLY',
+            'ECONNRESET',
+            'ENOTFOUND',
+            'ETIMEDOUT',
+          ];
+          if (reconnectErrors.some(e => err.message.includes(e))) {
+            return 1; // Reconnect after 1ms
+          }
           return true;
         },
       });
