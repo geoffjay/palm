@@ -43,11 +43,9 @@ export class SessionManager {
       const redisUrl = process.env.REDIS_URL;
       console.log("🔧 Redis URL (masked):", redisUrl.replace(/:[^:@]+@/, ':***@'));
 
-      // Parse URL to check if it needs TLS
-      const needsTLS = redisUrl.includes('upstash.io') || redisUrl.startsWith('rediss://');
-      console.log("🔧 TLS required:", needsTLS);
+      // Internal fly.io Redis - no TLS needed on private network
+      console.log("🔧 Using internal fly.io Redis (no TLS)");
 
-      console.log("🔧 Creating Redis connection with URL and TLS");
       this.redis = new Redis(redisUrl, {
         family: 0, // Allow both IPv4 and IPv6
         connectTimeout: 5000,
@@ -55,9 +53,6 @@ export class SessionManager {
         maxRetriesPerRequest: 3,
         enableAutoPipelining: true,
         enableReadyCheck: true,
-        tls: needsTLS ? {
-          rejectUnauthorized: true,
-        } : undefined,
         retryStrategy(times) {
           if (times > 10) {
             console.error(`🔧 Redis retry limit reached after ${times} attempts`);
