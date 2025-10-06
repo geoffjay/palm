@@ -71,7 +71,7 @@
     "@testing-library/react-hooks": "^8.0.1",
     "@types/bun": "latest",
     "@types/ioredis": "^5.0.0",
-    "@types/jsdom": "^21.1.7",
+    "@types/jsdom": "^27.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/styled-components": "^5.1.34",
